@@ -1,0 +1,117 @@
+# QA Gate Decision
+# Story: 2.1 - OneBot API 客户端
+# Generated: 2026-03-13
+
+story_id: "2.1"
+story_title: "OneBot API 客户端"
+epic: "Epic 2: 核心点赞引擎与名额管理"
+reviewer: "Quinn (Test Architect) — Claude Opus 4.6"
+review_date: "2026-03-13"
+
+# Gate Decision: PASS | CONCERNS | FAIL | WAIVED
+gate_decision: PASS
+
+decision_rationale: |
+  Story 2.1 实现质量优秀，7 项 AC 全部通过验证。cargo check 通过（7 个 dead_code 警告
+  均为 Story 2.1 自身库代码未被消费，将在 Story 2.2/2.3 中使用；另有 5 个 Story 1.2 遗留），
+  tsc --noEmit 零错误。
+
+  代码精准落地了架构文档的 serde 双策略设计——这是本 Story 最核心的技术挑战：
+  - 发送给 OneBot 的类型（SendLikeRequest）无 rename，保持 snake_case
+  - 暴露给前端的类型（FriendInfo/OneBotLoginInfo）使用 camelCase + alias 双向兼容
+  - 内部类型（OneBotResponse）无 rename，直接匹配 OneBot snake_case
+
+  重试逻辑超越 AC#6 基本要求：区分可重试（ConnectionRefused/Timeout/5xx）和不可重试
+  （Deserialize/OneBot 业务错误），避免无意义重试。Option<T> 处理 null data 方案类型安全。
+
+  前序 Story 全部教训正确落地：
+  - Story 1.3 M1: call_api 检查 HTTP 状态码
+  - Story 1.4 M2: call_api 检查 OneBot status 字段
+
+  给出 PASS 的原因：仅 1 个 Medium issue（日志覆盖小缺口），不影响正确性和功能完整性。
+
+# Verification Results
+verification:
+  cargo_check: PASS  # 12 dead_code/unused warnings (7 from 2.1 library code, 5 from 1.2)
+  tsc_noEmit: PASS   # zero errors
+  ac_coverage: "7/7 PASS"
+  architecture_compliance: PASS
+  naming_conventions: PASS
+  error_handling: PASS
+  serde_strategy: PASS  # 三种场景（发送/前端暴露/内部）策略正确
+  previous_lessons_applied: PASS  # Story 1.3 M1 + Story 1.4 M2 均已落地
+
+# AC Matrix
+acceptance_criteria:
+  ac1_reqwest_http_post: PASS
+  ac2_three_endpoints: PASS
+  ac3_serde_camelcase_alias: PASS
+  ac4_timeout_10s: PASS
+  ac5_thiserror_error_enum: PASS
+  ac6_retry_max2_interval1s: PASS
+  ac7_tracing_logging: PASS  # minor gap: 4xx and Deserialize errors not logged
+
+# Issues Summary
+issues:
+  high: 0
+  medium: 1
+  low: 3
+
+medium_issues:
+  - id: M1
+    title: "call_api 中 HTTP 4xx 和 Deserialize 错误未记录 tracing::error! 日志"
+    file: "onebot/client.rs:48-59, 63-65"
+    blocking: false
+    recommendation: |
+      AC#7 要求 "error 级别失败"。两个 early return 路径跳过了 tracing::error!：
+      1. HTTP 4xx (client.rs:59): return Err(err) 无日志
+      2. Deserialize (client.rs:63-65): ? 操作符直接返回
+      风险低（localhost OneBot 不应产生 4xx；Deserialize 极少），但建议补全：
+      在两处 return 前添加 tracing::error! 以保持日志完整性。
+
+low_issues:
+  - id: L1
+    title: "FriendInfo.remark 的 alias = 'remark' 冗余"
+    file: "onebot/types.rs:45"
+    blocking: false
+    recommendation: |
+      rename_all = "camelCase" 对单词 remark 无变换，alias 与主键相同。
+      default 属性有用，alias 仅冗余。可移除 alias 保持简洁。
+  - id: L2
+    title: "OneBotClient 未实现 Clone"
+    file: "onebot/client.rs:11"
+    blocking: false
+    recommendation: |
+      Story 2.3 引擎可能需要共享客户端。reqwest::Client 内部使用 Arc，
+      添加 Clone derive 是零成本的。建议 Story 2.3 按需添加。
+  - id: L3
+    title: "重试日志未说明触发重试的原因"
+    file: "onebot/client.rs:39"
+    blocking: false
+    recommendation: |
+      当前重试日志 "重试 OneBot API {}: 第 {} 次" 未包含 last_error 信息。
+      建议增加错误摘要方便生产环境定位问题。
+
+# Risk Assessment
+risk_level: LOW
+risk_factors:
+  - "日志覆盖小缺口（M1），不影响功能，仅影响调试体验"
+  - "Library code 无运行时消费者，端到端验证需 Story 2.2/2.3 完成后执行"
+
+# Code Quality
+code_quality:
+  correctness: 9
+  architecture: 10
+  security: 9
+  maintainability: 9
+  test_readiness: 7
+
+# Noted Deviations
+deviations: []
+
+# Recommendation
+recommendation: |
+  PROCEED to Story 2.2。本 Story 是 Sprint 2 中质量最高的实现。
+  - M1 (建议): 补全 4xx/Deserialize 路径的 tracing::error! 日志
+  - L1-L3: 可在 Story 2.3 整合时顺带处理
+  - 端到端验证: Story 2.3 引擎接入 OneBotClient 后进行集成冒烟测试

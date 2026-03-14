@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+src-tauri/target/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.stackdump
+
+# Claude Code
+.claude/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sln
+*.suo
+
+# Tauri generated
+src-tauri/gen/
+
+# Rust
+**/*.rs.bk
+
+# Reference projects (not part of this repo)
+SendLike/
+qq-auto-like/
+
+# BMAD internal (keep planning/implementation artifacts, exclude temp)
+.bmad-method/tmp/

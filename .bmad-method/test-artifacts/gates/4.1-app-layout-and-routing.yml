@@ -1,0 +1,147 @@
+# QA Gate — Story 4.1: 应用布局框架与路由
+# Reviewer: Quinn (QA Agent) | Model: Claude Opus 4.6
+# Date: 2026-03-14
+
+story: "4.1"
+title: "应用布局框架与路由"
+epic: "4"
+reviewer: "Quinn"
+date: "2026-03-14"
+
+gate_decision: PASS
+
+ac_results:
+  total: 13
+  passed: 13
+  partial: 0
+  failed: 0
+  details:
+    - ac: "#1 左侧 56px 宽图标导航栏（深色背景 #16121f）"
+      result: PASS
+      evidence: "SidebarNav.tsx:66 (w-14=56px, bg-bg-nav → --color-bg-nav: #16121f)"
+    - ac: "#2 导航栏包含 5 个图标按钮"
+      result: PASS
+      evidence: "SidebarNav.tsx:16-25 (4 top: LayoutDashboard/Users/BarChart3/FileText + 1 bottom: Settings)"
+    - ac: "#3 选中导航项高亮样式（渐变背景 + 发光效果）"
+      result: PASS
+      evidence: "SidebarNav.tsx:47 (bg-gradient-to-br from-primary/20 to-accent/20 + shadow-[0_0_12px_rgba(242,167,195,0.3)])"
+    - ac: "#4 Tooltip 500ms 显示中文页面名"
+      result: PASS
+      evidence: "App.tsx:13 (TooltipProvider delay={500}); SidebarNav.tsx:56-58 (TooltipContent side='right')"
+    - ac: "#5 右侧主内容区根据路由渲染对应页面"
+      result: PASS
+      evidence: "Layout.tsx:11 (<Outlet />); App.tsx:16-22 (5 Routes nested inside Layout)"
+    - ac: "#6 React Router v7 管理路由"
+      result: PASS
+      evidence: "App.tsx:1 (react-router-dom); main.tsx:3,9 (BrowserRouter); 5 路由: /dashboard, /friends, /statistics, /logs, /settings"
+    - ac: "#7 默认路由 /dashboard"
+      result: PASS
+      evidence: "App.tsx:22 (<Route path='*' element={<Navigate to='/dashboard' replace />} />)"
+    - ac: "#8 顶部状态条 NapCat 连接状态 + QQ 信息"
+      result: PASS
+      evidence: "StatusBar.tsx:55 (h-9=36px per UX spec修正); 左侧: 8px圆形指示灯+状态文字; 右侧: loginInfo.nickname + qqNumber"
+    - ac: "#9 Kawaii 暗色主题"
+      result: PASS
+      evidence: "Layout.tsx:7 (bg-bg-base → #1a1625); index.css 完整 Kawaii token 未修改"
+    - ac: "#10 HarmonyOS Sans SC 字体"
+      result: PASS
+      evidence: "index.css:33 (--font-primary); index.css:132 (body font-family: var(--font-primary))"
+    - ac: "#11 键盘导航（Tab + Enter）"
+      result: PASS
+      evidence: "SidebarNav.tsx:65 (<nav aria-label='主导航'>); NavItem:42 (aria-label); NavItem:45 (focus-visible:ring-2 + outline-none); NavLink 自动 aria-current='page'"
+    - ac: "#12 Zustand stores"
+      result: PASS
+      evidence: "useNapCatStore.ts (status/loginInfo/setters/fetchers); useLikeStore.ts (dailyStats/isRunning/batchProgress/engine); useSettingsStore.ts (config/fetchConfig/updateConfig); useLogStore.ts (entries/filter/addEntry/clear)"
+    - ac: "#13 useTauriEvent hook"
+      result: PASS
+      evidence: "useTauriEvent.ts (泛型 <T>, listen/unlisten cleanup, deps [eventName, handler])"
+
+architecture_compliance: PASS
+notes:
+  - 未修改任何 Rust 代码 (src-tauri/)
+  - index.css 仅追加 page-enter 动画 + overflow:hidden，未修改主题 token
+  - TypeScript 编译零错误 (npx tsc --noEmit pass)
+  - shadcn/ui tooltip 使用 base-ui API（render prop 而非 asChild），正确适配
+  - Zustand store setters 引用稳定，可安全传入 useTauriEvent 无需 useCallback
+  - TauriEventProvider 初始化拉取全部核心状态（napcat/engine/config/dailyStats），覆盖完整
+  - 所有页面占位组件使用 page-enter CSS 动画类，准备就绪供后续 Story 填充
+  - 导航结构（top 4 + bottom 1 with mt-auto）符合 UX spec 精确规格
+
+findings:
+  p1: 0
+  p2: 0
+  p3: 1
+  p4: 2
+  details:
+    - id: P3-F1
+      severity: P3
+      type: consistency
+      description: |
+        Stores 直接调用 invoke() 而非复用 src/lib/tauri.ts 封装函数。
+        例如 useNapCatStore.ts:21 用 invoke<NapCatStatus>("get_napcat_status")
+        而非已有的 getNapCatStatus()；useSettingsStore.ts:16 用 invoke<ConfigEntry[]>("get_config")
+        而非 getConfig()。src/lib/tauri.ts 已封装 7 个 command 函数，stores 未利用。
+        功能不受影响，但违反 DRY 原则，未来 command 名变更需要多处修改。
+      location: "useNapCatStore.ts:21,29; useSettingsStore.ts:16,25; useLikeStore.ts:39,48"
+      recommendation: |
+        在后续 Story（如 4.2/4.3 填充页面逻辑时）一并重构，将 store 的 invoke 调用
+        替换为 tauri.ts 封装函数。也可在 tauri.ts 中补充缺失的 getDailyStats /
+        getEngineStatus 封装。低优先级，不阻塞。
+    - id: P4-F1
+      severity: P4
+      type: scalability
+      description: |
+        useLogStore.addEntry 使用 [...state.entries, entry] 无限追加，无上限控制。
+        长时间运行可能积累大量日志条目消耗内存。
+      location: "useLogStore.ts:24-25"
+      recommendation: |
+        Story 4.4（日志页面）实现时添加 maxEntries 限制（如 1000 条，FIFO 淘汰）。
+        当前作为占位 store 可接受。
+    - id: P4-F2
+      severity: P4
+      type: ux
+      description: |
+        StatusBar 错误状态仅显示"错误"二字，未展示 NapCatStatus.error 的具体信息。
+        { error: string } variant 的 error 字段被忽略。
+      location: "StatusBar.tsx:22"
+      recommendation: |
+        可改为 getStatusText 返回 `错误: ${status.error}` 并 truncate 长度。
+        低优先级，Story 4.2 仪表盘可提供更详细的错误展示。
+
+files_reviewed:
+  - src/main.tsx
+  - src/App.tsx
+  - src/index.css
+  - src/components/layout/Layout.tsx
+  - src/components/layout/SidebarNav.tsx
+  - src/components/layout/StatusBar.tsx
+  - src/components/TauriEventProvider.tsx
+  - src/hooks/useTauriEvent.ts
+  - src/stores/useNapCatStore.ts
+  - src/stores/useLikeStore.ts
+  - src/stores/useSettingsStore.ts
+  - src/stores/useLogStore.ts
+  - src/pages/Dashboard.tsx
+  - src/pages/Friends.tsx
+  - src/pages/Statistics.tsx
+  - src/pages/Logs.tsx
+  - src/pages/Settings.tsx
+  - src/components/ui/tooltip.tsx
+  - src/lib/tauri.ts
+  - src/types/napcat.ts
+  - src/types/engine.ts
+  - src/types/like.ts
+  - src/types/config.ts
+  - src/types/stats.ts
+
+risk_assessment:
+  overall: LOW
+  factors:
+    - "纯前端 Story，零 Rust 修改，爆炸半径极小"
+    - "TypeScript 编译零错误"
+    - "所有 13 个 AC 全部满足"
+    - "正确使用 base-ui tooltip API（非 Radix），适配 shadcn v5 新架构"
+    - "Zustand store setter 引用稳定，无 useEffect 无限循环风险"
+    - "TauriEventProvider 集中初始化 + 事件监听，模式清晰"
+    - "P3 finding 仅为代码一致性问题，不影响功能或安全"
+    - "占位页面结构统一，为后续 4.2/4.3/4.4 提供干净基础"

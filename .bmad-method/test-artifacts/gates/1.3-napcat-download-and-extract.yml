@@ -1,0 +1,106 @@
+# QA Gate Decision
+# Story: 1.3 - NapCat 下载与解压
+# Generated: 2026-03-11
+
+story_id: "1.3"
+story_title: "NapCat 下载与解压"
+epic: "Epic 1: 项目初始化与首次启动引导"
+reviewer: "Quinn (Test Architect) — Claude Opus 4.6"
+review_date: "2026-03-11"
+
+# Gate Decision: PASS | CONCERNS | FAIL | WAIVED
+gate_decision: CONCERNS
+
+decision_rationale: |
+  Story 1.3 实现质量良好，7 项 AC 全部通过验证，Rust 编译和 TypeScript 类型检查均无错误。
+  代码严格遵循架构规范（模块结构、serde camelCase、thiserror 分层、事件命名 namespace:action）。
+  流式下载和 mangled_name() ZIP 安全实践值得肯定。
+
+  给出 CONCERNS 而非 PASS 的原因：
+  1. HTTP 状态码未检查（M1）— reqwest 不会自动将 4xx/5xx 视为错误，404 时会下载 HTML 错误页面
+  2. extract_napcat_zip 阻塞 Tokio 异步线程（M2）— 同步 I/O 在 async 上下文中运行
+  3. 解压失败后目录残留部分文件，无清理机制（M3）
+
+  M1 建议在 Story 1.4 前修复（直接影响下载可靠性），M2/M3 可在后续 Sprint 优化。
+
+# Verification Results
+verification:
+  cargo_check: PASS  # 6 dead_code warnings (all from Story 1.2, not 1.3)
+  tsc_noEmit: PASS   # zero errors
+  ac_coverage: "7/7 PASS"
+  architecture_compliance: PASS
+  naming_conventions: PASS
+  error_handling: PASS
+
+# AC Matrix
+acceptance_criteria:
+  ac1_detect_and_download: PASS
+  ac2_download_progress_events: PASS
+  ac3_extract_to_napcat_dir: PASS
+  ac4_download_failure_handling: PASS
+  ac5_manual_import: PASS
+  ac6_hide_napcat_terminology: PASS
+  ac7_three_tauri_commands: PASS
+
+# Issues Summary
+issues:
+  high: 0
+  medium: 3
+  low: 4
+
+medium_issues:
+  - id: M1
+    title: "HTTP 状态码未检查 — 404 时静默下载错误页面"
+    file: "napcat/downloader.rs:17"
+    blocking: false
+    recommendation: "添加 response.error_for_status()? 检查 HTTP 响应码。建议 Story 1.4 前修复。"
+  - id: M2
+    title: "extract_napcat_zip 阻塞 Tokio 异步线程"
+    file: "commands/napcat.rs:9, napcat/downloader.rs:68"
+    blocking: false
+    recommendation: "使用 tokio::task::spawn_blocking() 包裹同步 extract 调用"
+  - id: M3
+    title: "解压失败后 napcat 目录残留部分文件"
+    file: "napcat/downloader.rs:73-109"
+    blocking: false
+    recommendation: "解压前清理目标目录，或解压到临时目录后原子 rename"
+
+low_issues:
+  - id: L1
+    title: "emit 错误被静默丢弃"
+    file: "napcat/downloader.rs:58,104"
+    blocking: false
+  - id: L2
+    title: "每 chunk emit 导致事件洪泛风险"
+    file: "napcat/downloader.rs:28-58"
+    blocking: false
+  - id: L3
+    title: "Content-Length 缺失时 percentage 始终为 0"
+    file: "napcat/downloader.rs:18"
+    blocking: false
+  - id: L4
+    title: "import 未预验证 zip 有效性（AC#5 部分缺失）"
+    file: "napcat/downloader.rs:117-122"
+    blocking: false
+
+# Risk Assessment
+risk_level: LOW-MEDIUM
+risk_factors:
+  - "GitHub release URL 变更导致 404 静默失败（M1 修复后消除）"
+  - "大文件解压阻塞 async 线程，桌面应用影响有限"
+  - "运行时验证缺失（继承 Story 1.2 M3）"
+
+# Code Quality
+code_quality:
+  correctness: 8
+  architecture: 9
+  security: 8
+  maintainability: 9
+  test_readiness: 7
+
+# Recommendation
+recommendation: |
+  PROCEED to Story 1.4。建议优先修复 M1（一行代码变更），M2/M3 可延后：
+  - M1 (优先): downloader.rs:17 后添加 `.error_for_status()?`，防止 404/5xx 静默失败
+  - M2 (Sprint 2): 引入 spawn_blocking，当前桌面应用单用户场景阻塞影响有限
+  - M3 (Sprint 2): 添加解压前清理逻辑，防止状态不一致

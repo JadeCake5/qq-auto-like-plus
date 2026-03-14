@@ -1,0 +1,39 @@
+[package]
+name = "qq-auto-like-plus"
+version = "0.1.0"
+description = "QQ Auto Like Plus - 自动为 QQ 好友点赞"
+authors = ["Shira"]
+edition = "2021"
+
+[lib]
+name = "qq_auto_like_plus_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
+tauri-plugin-autostart = "2"
+tauri-plugin-notification = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-shell = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-log = "2"
+log = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.32", features = ["bundled"] }
+reqwest = { version = "0.12", features = ["json", "stream"] }
+tokio = { version = "1", features = ["full"] }
+tokio-cron-scheduler = "0.13"
+axum = "0.8"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+anyhow = "1"
+thiserror = "2"
+chrono = { version = "0.4", features = ["serde"] }
+rand = "0.9"
+uuid = { version = "1", features = ["v4"] }
+zip = "2"
+futures-util = "0.3"

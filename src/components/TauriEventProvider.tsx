@@ -1,0 +1,76 @@
+import { useEffect } from "react";
+import { useTauriEvent } from "@/hooks/useTauriEvent";
+import { useNapCatStore } from "@/stores/useNapCatStore";
+import { useLikeStore } from "@/stores/useLikeStore";
+import { useSettingsStore } from "@/stores/useSettingsStore";
+import { useLogStore } from "@/stores/useLogStore";
+import type { NapCatStatus } from "@/types/napcat";
+import type { EngineStatus } from "@/types/engine";
+import type { BatchLikeProgress, BatchLikeResult, ReplyLikeResult } from "@/types/like";
+
+let logId = 0;
+
+export function TauriEventProvider() {
+  const setNapCatStatus = useNapCatStore((s) => s.setStatus);
+  const setEngineStatus = useLikeStore((s) => s.setEngineStatus);
+  const setBatchProgress = useLikeStore((s) => s.setBatchProgress);
+  const onBatchComplete = useLikeStore((s) => s.onBatchComplete);
+  const fetchDailyStats = useLikeStore((s) => s.fetchDailyStats);
+  const fetchConfig = useSettingsStore((s) => s.fetchConfig);
+
+  useTauriEvent<NapCatStatus>("napcat:status-changed", setNapCatStatus);
+  useTauriEvent<EngineStatus>("engine:status-changed", setEngineStatus);
+  useTauriEvent<BatchLikeProgress>("like:progress", setBatchProgress);
+  useTauriEvent<BatchLikeResult>("like:batch-complete", onBatchComplete);
+  useTauriEvent<ReplyLikeResult>("like:reply-complete", (result) => {
+    if (result.success) {
+      fetchDailyStats();
+    }
+  });
+  useTauriEvent<void>("config:updated", fetchConfig);
+
+  useEffect(() => {
+    useNapCatStore.getState().fetchStatus();
+    useNapCatStore.getState().fetchLoginInfo();
+    useLikeStore.getState().fetchEngineStatus();
+    useLikeStore.getState().fetchDailyStats();
+    useSettingsStore.getState().fetchConfig();
+  }, []);
+
+  // attachLogger: 接收 Rust 后端 tracing 日志
+  useEffect(() => {
+    let detach: (() => void) | null = null;
+
+    (async () => {
+      try {
+        const { attachLogger } = await import("@tauri-apps/plugin-log");
+        detach = await attachLogger(({ level, message }) => {
+          // 1=TRACE, 2=DEBUG → 忽略; 3=INFO, 4=WARN, 5=ERROR
+          if (level <= 2) return;
+
+          let mapped: "info" | "warn" | "error";
+          if (level === 4) mapped = "warn";
+          else if (level >= 5) mapped = "error";
+          else mapped = "info";
+
+          useLogStore.getState().addEntry({
+            id: String(++logId),
+            timestamp: new Date().toLocaleTimeString("zh-CN", {
+              hour12: false,
+            }),
+            level: mapped,
+            message,
+          });
+        });
+      } catch (e) {
+        console.error("attachLogger failed:", e);
+      }
+    })();
+
+    return () => {
+      detach?.();
+    };
+  }, []);
+
+  return null;
+}

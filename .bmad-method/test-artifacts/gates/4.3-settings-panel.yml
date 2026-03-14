@@ -1,0 +1,167 @@
+# QA Gate — Story 4.3: 设置面板
+# Reviewer: Quinn (QA Agent) | Model: Claude Opus 4.6
+# Date: 2026-03-14
+
+story: "4.3"
+title: "设置面板"
+epic: "4"
+reviewer: "Quinn"
+date: "2026-03-14"
+
+gate_decision: PASS
+
+ac_results:
+  total: 11
+  passed: 11
+  partial: 0
+  failed: 0
+  details:
+    - ac: "#1 设置分组 — 4 个分组卡片（圆角 14px、深色背景）"
+      result: PASS
+      evidence: "Settings.tsx:137,176,226,252 (4 SettingCard instances); SettingCard.tsx:19 (rounded-[14px] bg-bg-card p-5)"
+    - ac: "#2 点赞设置组 — dailyLimit/timesPerFriend/schedule/batchInterval"
+      result: PASS
+      evidence: "Settings.tsx:142-172 (SliderField 1-200 人, 1-20 次, 1-60 秒 + TimePickerField 0-23:0-59)"
+    - ac: "#3 回赞设置组 — 开关/次数/预留/延迟范围"
+      result: PASS
+      evidence: "Settings.tsx:181-222 (Switch replyLikeEnabled + SliderField ×3 + delay min/max 0-60 with constraint enforcement)"
+    - ac: "#4 系统设置组 — 开机自启/最小化到托盘"
+      result: PASS
+      evidence: "Settings.tsx:231-248 (Switch autoStart → handleAutostart calls enable/disableAutostart; Switch minimizeToTray → saveConfig)"
+    - ac: "#5 运行环境设置组 — NapCat 路径/API 地址/端口"
+      result: PASS
+      evidence: "Settings.tsx:257-304 (napcatPath readonly span + disabled Button + Tooltip '暂不支持修改'; Input onebotApiUrl onBlur save; Input webhookPort type=number onBlur clamp 1024-65535)"
+    - ac: "#6 即时保存 — invoke('update_config') + toast 通知"
+      result: PASS
+      evidence: "Settings.tsx:23-30 saveConfig → updateConfigApi (from tauri.ts) + toast.success('设置已保存~') / toast.error('保存失败，请重试')"
+    - ac: "#7 热更新 — config:updated 事件实时生效"
+      result: PASS
+      evidence: "Rust settings.rs:34 app.emit('config:updated', &key); TauriEventProvider 监听 → fetchConfig() 刷新 store → UI 自动响应。定时配置变更 settings.rs:37-53 自动 reschedule"
+    - ac: "#8 恢复默认 — 每组右上角恢复默认按钮"
+      result: PASS
+      evidence: "SettingCard.tsx:27-36 (Button ghost RotateCcw icon '恢复默认'); Settings.tsx:85-128 (4 reset handlers 使用 CONFIG_DEFAULTS 值批量 saveConfig)"
+    - ac: "#9 表单校验 — 数值范围/必填/边界修正"
+      result: PASS
+      evidence: "SliderField.tsx:49 clamp Math.min(Math.max(v, min), max); Settings.tsx:74-83 handlePortBlur clamp 1024-65535 + Math.floor; Settings.tsx:60-72 delay min<=max 自动互调"
+    - ac: "#10 术语隐藏 — NapCat → '运行环境'"
+      result: PASS
+      evidence: "Settings.tsx:253 title='运行环境设置'; Settings.tsx:258 '运行环境路径'; Settings.tsx:270 aria-label='修改运行环境路径'; 全文无 NapCat 字样暴露给用户"
+    - ac: "#11 无障碍 — aria-label + 键盘导航 + focus-visible"
+      result: PASS
+      evidence: "Switch aria-label: '回赞开关'/'开机自启'/'最小化到托盘' (Settings.tsx:188,236,245); SliderField.tsx:51 aria-label={label}; TimePickerField.tsx:32,48 aria-label '小时'/'分钟'; Input aria-label (Settings.tsx:288,300); SettingCard.tsx:32 aria-label='恢复{title}默认设置'; focus-visible 由 shadcn base-ui primitives 内置"
+
+architecture_compliance: PASS
+notes:
+  - TypeScript 编译零错误 (tsc --noEmit pass, per Dev Agent Record)
+  - ESLint 零错误零警告 (per Dev Agent Record)
+  - 未修改任何 Rust 后端代码 ✅
+  - 未修改 TauriEventProvider / Layout / SidebarNav / StatusBar ✅
+  - 未创建新 Zustand store，正确复用 useSettingsStore ✅
+  - 未修改 src/index.css ✅
+  - Settings.tsx 使用 updateConfigApi from tauri.ts（非 invoke 直调），符合封装约定 ✅
+  - 开机自启特殊路径：handleAutostart → enableAutostart/disableAutostart（非 updateConfig），正确 ✅
+  - sonner.tsx 已移除 next-themes 依赖（Next.js only），硬编码 theme="dark" ✅
+  - base-ui Tooltip render prop 模式与 Story 4.1/4.2 一致 ✅
+  - Slider 使用 onValueCommitted 保存（拖拽时仅更新 localState），UX 友好 ✅
+  - uncontrolled Input + key prop remount 模式避免 react-hooks lint 问题 ✅
+  - Story 4.2 遗留 QA 修复验证：
+    - P2-F1（进度条除零）：Dashboard.tsx:230 已使用 Math.max(total, 1) ✅
+    - P3-F1（invoke 一致性）：Dashboard.tsx:4,69,79 已改用 tauri.ts 封装函数 ✅
+    - P3-F2（NapCat starting 状态）：Dashboard.tsx:30 已映射 starting→"重连中" ✅
+
+findings:
+  p1: 0
+  p2: 1
+  p3: 2
+  p4: 2
+  details:
+    - id: P2-F1
+      severity: P2
+      type: ux
+      description: |
+        恢复默认 toast 轰炸。resetLikeDefaults 连续调用 5 次 saveConfig，每次独立触发
+        toast.success("设置已保存~")，用户一次点击收到 5 条堆叠的相同 toast。
+        resetReplyDefaults 同理 5 条，resetEnvDefaults 2 条。视觉噪音严重，看起来像 bug。
+      location: "Settings.tsx:85-128 (resetLikeDefaults, resetReplyDefaults, resetEnvDefaults)"
+      recommendation: |
+        方案 A（推荐）：抽取 saveSilent 函数（不触发 toast），reset 函数内部用 saveSilent
+        批量更新，最后手动调一次 toast.success("已恢复默认设置~")。
+        方案 B：后端新增 batch_update_config command 接受 key-value 数组，单次 invoke。
+        建议在 Story 4.4 或独立 patch 中修复。
+    - id: P3-F1
+      severity: P3
+      type: consistency
+      description: |
+        useSettingsStore 仍直接调用 invoke() 而非 tauri.ts 封装函数。
+        Store 内 fetchConfig (line 16) 用 invoke<ConfigEntry[]>("get_config") 而非 getConfig()，
+        updateConfig (line 24) 用 invoke("update_config") 而非 updateConfig from tauri.ts。
+        Settings.tsx 本身正确使用了 tauri.ts 封装（updateConfigApi），形成了混合模式。
+        延续自 Story 4.1 P3-F1，至今未修复。
+      location: "useSettingsStore.ts:16,24-25"
+      recommendation: |
+        将 store 中的 invoke 调用替换为 tauri.ts 封装函数（getConfig, updateConfig）。
+        Settings.tsx 已经不依赖 store.updateConfig（直接用 tauri.ts），所以修改 store
+        不影响 Settings 页面。可在 Story 4.4 统一修复。
+    - id: P3-F2
+      severity: P3
+      type: hygiene
+      description: |
+        label.tsx 第 1 行包含 "use client" 指令，这是 Next.js RSC 特有指令，
+        在 Vite + Tauri 应用中无意义。由 shadcn CLI 生成，无功能影响但属于死代码。
+      location: "src/components/ui/label.tsx:1"
+      recommendation: |
+        移除 "use client" 行。影响极小，可在任意后续 Story 中顺手清理。
+    - id: P4-F1
+      severity: P4
+      type: ux
+      description: |
+        恢复默认按钮无 loading 状态。批量 reset 涉及 2-5 次异步 invoke 调用，
+        期间按钮可重复点击。在快速网络下几乎无感知，但理论上存在重复触发风险。
+      location: "SettingCard.tsx:27-36; Settings.tsx:85-128"
+      recommendation: |
+        可添加 isResetting 状态在 reset 执行期间禁用按钮。
+        优先级极低，桌面本地 IPC 延迟 <10ms。
+    - id: P4-F2
+      severity: P4
+      type: robustness
+      description: |
+        uncontrolled Input 的 key prop 重置边界情况。API 地址和 Webhook 端口使用
+        key={config.xxx} 的 uncontrolled 模式，若用户正在输入时外部 config:updated 事件
+        触发 store 刷新，输入框会因 key 变化重新挂载，丢失用户未提交的输入。
+        在单用户桌面应用中极不可能发生（只有本用户在修改设置）。
+      location: "Settings.tsx:284,294-297"
+      recommendation: |
+        如未来出现问题，可改为 controlled input + debounce 模式。
+        当前场景下可接受，无需修改。
+
+files_reviewed:
+  - src/pages/Settings.tsx (MODIFIED — 核心审查)
+  - src/components/settings/SettingCard.tsx (NEW)
+  - src/components/settings/SliderField.tsx (NEW)
+  - src/components/settings/TimePickerField.tsx (NEW)
+  - src/components/ui/slider.tsx (NEW — shadcn CLI)
+  - src/components/ui/label.tsx (NEW — shadcn CLI)
+  - src/components/ui/input.tsx (NEW — shadcn CLI)
+  - src/components/ui/select.tsx (NEW — shadcn CLI)
+  - src/components/ui/sonner.tsx (NEW — shadcn CLI, fixed)
+  - src/App.tsx (MODIFIED — Toaster 添加)
+  - src/types/config.ts (MODIFIED — 3 新字段 + parseConfigEntries)
+  - src/lib/tauri.ts (MODIFIED — 3 autostart 封装)
+  - src/stores/useSettingsStore.ts (cross-ref, 未修改)
+  - src-tauri/src/commands/settings.rs (cross-ref, Rust 后端验证)
+  - src/pages/Dashboard.tsx (cross-ref, 验证 Story 4.2 QA 修复)
+
+risk_assessment:
+  overall: LOW
+  factors:
+    - "纯前端 Story，零 Rust 修改，爆炸半径极小"
+    - "TypeScript 编译零错误，ESLint 零警告"
+    - "11/11 AC 全部满足"
+    - "正确复用已有 useSettingsStore 和 TauriEventProvider"
+    - "Settings.tsx 使用 tauri.ts 封装函数（非 invoke 直调），改善了代码一致性"
+    - "开机自启特殊路径正确处理（enable/disableAutostart 而非 updateConfig）"
+    - "Slider onValueCommitted 模式 UX 优秀（拖拽流畅，松手才保存）"
+    - "表单校验覆盖完整：Slider clamp + port range + delay min<=max"
+    - "Story 4.2 遗留 3 个 QA 问题全部验证已修复"
+    - "P2 仅为 toast 批量触发的 UX 瑕疵，不影响数据正确性或功能"
+    - "P3 为代码卫生问题，不影响功能或安全"

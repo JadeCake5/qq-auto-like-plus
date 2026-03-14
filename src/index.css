@@ -1,0 +1,149 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  /* === 色彩系统 — Kawaii 暗色主题 === */
+  --color-bg-base: #1a1625;
+  --color-bg-card: #231f31;
+  --color-bg-elevated: #2d2840;
+  --color-bg-nav: #16121f;
+
+  --color-primary: #f2a7c3;       /* 樱花粉 */
+  --color-secondary: #a7c7f2;     /* 天空蓝 */
+  --color-accent: #c3a7f2;        /* 薰衣草紫 */
+  --color-mint: #a7f2d4;          /* 薄荷绿 */
+  --color-peach: #f2cfa7;         /* 蜜桃橙 */
+  --color-coral: #f28b8b;         /* 珊瑚红 */
+
+  --color-text-primary: #f0edf5;
+  --color-text-secondary: #9b95a8;
+  --color-text-muted: #6b6578;
+
+  /* === 圆角系统 — 偏大圆角营造 Kawaii 感 === */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* === 字体系统 === */
+  --font-primary: "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei UI", sans-serif;
+  --font-display: "HarmonyOS Sans SC", "PingFang SC", sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", "Consolas", monospace;
+
+  /* === 字号层级 === */
+  --text-display: 24px;
+  --text-heading: 18px;
+  --text-subheading: 15px;
+  --text-body: 14px;
+  --text-caption: 12px;
+  --text-stat: 32px;
+  --text-stat-label: 11px;
+}
+
+/* === shadcn/ui 颜色变量 — Kawaii 暗色主题映射 === */
+:root {
+  --background: #1a1625;
+  --foreground: #f0edf5;
+  --card: #231f31;
+  --card-foreground: #f0edf5;
+  --popover: #2d2840;
+  --popover-foreground: #f0edf5;
+  --primary: #f2a7c3;
+  --primary-foreground: #1a1625;
+  --secondary: #a7c7f2;
+  --secondary-foreground: #1a1625;
+  --muted: #2d2840;
+  --muted-foreground: #9b95a8;
+  --accent: #c3a7f2;
+  --accent-foreground: #1a1625;
+  --destructive: #f28b8b;
+  --border: rgba(240, 237, 245, 0.1);
+  --input: rgba(240, 237, 245, 0.15);
+  --ring: #f2a7c3;
+  --chart-1: #f2a7c3;
+  --chart-2: #a7c7f2;
+  --chart-3: #c3a7f2;
+  --chart-4: #a7f2d4;
+  --chart-5: #f2cfa7;
+  --radius: 0.75rem;
+  --sidebar: #16121f;
+  --sidebar-foreground: #f0edf5;
+  --sidebar-primary: #f2a7c3;
+  --sidebar-primary-foreground: #1a1625;
+  --sidebar-accent: #2d2840;
+  --sidebar-accent-foreground: #f0edf5;
+  --sidebar-border: rgba(240, 237, 245, 0.1);
+  --sidebar-ring: #f2a7c3;
+}
+
+@theme inline {
+  --font-sans: "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei UI", sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  /* Radius values from Kawaii @theme (not overridden by shadcn calc) */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-3xl: 28px;
+  --radius-4xl: 32px;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-primary);
+    font-size: var(--text-body);
+    line-height: 1.6;
+    margin: 0;
+    overflow: hidden;
+  }
+  #root {
+    overflow: hidden;
+  }
+  .page-enter {
+    animation: fadeIn 150ms ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

@@ -1,0 +1,57 @@
+# QA Gate — Story 3.2: 面板窗口管理与托盘交互
+# Reviewer: Quinn (QA Agent) | Model: Claude Opus 4.6
+# Date: 2026-03-14
+
+story: "3.2"
+title: "面板窗口管理与托盘交互"
+epic: "3"
+reviewer: "Quinn"
+date: "2026-03-14"
+
+gate_decision: PASS
+
+ac_results:
+  total: 3
+  passed: 3
+  failed: 0
+  details:
+    - ac: "#1 双击托盘弹出面板 + 固定尺寸 + 居中"
+      result: PASS
+      evidence: "tray/mod.rs:30-35, tauri.conf.json:18-20"
+    - ac: "#2 关闭按钮隐藏到托盘"
+      result: PASS
+      evidence: "lib.rs:181-184 (prevent_close + hide)"
+    - ac: "#3 退出确认对话框 + 优雅停止"
+      result: PASS
+      evidence: "tray/mod.rs:149-171 (dialog OkCancel + NapCat stop + exit)"
+
+architecture_compliance: PASS
+
+findings:
+  p1: 0
+  p2: 0
+  p3: 3
+  p4: 0
+  details:
+    - id: P3-F1
+      severity: P3
+      description: "open_panel 与双击事件逻辑重复 (4行), 可提取共用函数"
+      location: "tray/mod.rs:30-35, 76-81"
+      recommendation: "提取 show_main_window(app) 私有函数"
+    - id: P3-F2
+      severity: P3
+      description: "on_window_event 不区分窗口 label, 拦截所有窗口关闭"
+      location: "lib.rs:180-186"
+      recommendation: "Epic 4 引入新窗口时添加 window.label() == 'main' 条件"
+    - id: P3-F3
+      severity: P3
+      description: "quit handler 未显式关闭 DB, 依赖 exit(0) 进程清理"
+      location: "tray/mod.rs:155-169"
+      recommendation: "Story 3.3/3.4 统一补全退出流程 (scheduler→DB→exit)"
+
+files_reviewed:
+  - src-tauri/Cargo.toml
+  - src-tauri/src/lib.rs
+  - src-tauri/src/tray/mod.rs
+  - src-tauri/tauri.conf.json
+  - src-tauri/capabilities/default.json

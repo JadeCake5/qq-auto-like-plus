@@ -1,0 +1,85 @@
+# QA Gate Decision — Story 5.2
+# Generated: 2026-03-14
+# Reviewer: Quinn (Test Architect)
+
+story: "5.2"
+title: "回赞处理逻辑"
+epic: 5
+status: Ready for Review → QA Reviewed
+
+gate_decision: PASS
+confidence: high
+
+review_type: code-review
+files_reviewed: 12
+lines_added: ~170
+
+acceptance_criteria:
+  total: 8
+  passed: 8
+  failed: 0
+  coverage: "100%"
+
+architecture_compliance:
+  enforcement_rules: "7/7 PASS"
+  anti_patterns: "0 found"
+  boundary_violations: "0 found"
+
+findings:
+  blockers: 0
+  concerns: 1
+  advisories: 2
+  info: 2
+
+concern_items:
+  - id: P2-F1
+    severity: medium
+    location: "TauriEventProvider.tsx:25-29"
+    description: |
+      回赞失败时前端不刷新名额数据。当 send_like 失败但 try_consume_quota 已成功消耗名额时
+      (skipped=false, success=false)，前端不调用 fetchDailyStats()，导致仪表盘名额显示陈旧数据。
+    recommendation: |
+      将条件从 `result.success` 改为 `!result.skipped`，确保名额已消耗的场景都触发刷新：
+      ```typescript
+      if (!result.skipped) {
+        fetchDailyStats();
+      }
+      ```
+    blocking: false
+
+advisory_items:
+  - id: P3-F1
+    severity: low
+    location: "reply_handler.rs:9-10"
+    description: "DbState 和 OneBotClientState 重复类型定义，应从共享位置导入"
+    recommendation: "将类型别名提取到 lib.rs 或 engine/mod.rs 作为 pub type 导出"
+    blocking: false
+
+  - id: P3-F2
+    severity: low
+    location: "reply_handler.rs:82"
+    description: "quota_result? 在 QuotaExhausted match 之后传播其他错误，语义不直观"
+    recommendation: "重构为完整 match 表达式提升可读性"
+    blocking: false
+
+info_items:
+  - id: P4-I1
+    location: "reply_handler.rs:30,50,67,86,112,124,140"
+    description: "expect(\"lock db\") 使用 6 次，与代码库现有模式一致，panic 被 tokio::spawn 捕获"
+    blocking: false
+
+  - id: P4-I2
+    location: "onebot/types.rs:77"
+    description: "ProfileLikePayload 添加 Deserialize derive — 必要的最小改动，Story 约束偏差已记录"
+    blocking: false
+
+summary: |
+  Implementation quality is good. All 8 acceptance criteria verified and passed.
+  Full architecture compliance (7/7 rules, 0 anti-patterns, 0 boundary violations).
+  Core reply logic correctly follows the flow: switch check → dedup check → quota check → delay → execute → record.
+  DB locks properly scoped (no lock held across await). Event emission covers all outcomes (success/skip/fail).
+  One P2 concern: frontend should also refresh daily stats on non-skipped failures since quota was consumed.
+  Two P3 advisories (duplicate type defs, code readability) are low risk and can be deferred.
+  Overall: solid, production-ready implementation.
+
+reviewed_at: "2026-03-14"

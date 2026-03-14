@@ -1,0 +1,113 @@
+# QA Gate Decision — Story 6.2
+# Generated: 2026-03-14
+# Reviewer: Quinn (Test Architect)
+
+story: "6.2"
+title: "标签 CRUD 与好友标签管理"
+epic: 6
+status: Ready for Review → QA Reviewed
+
+gate_decision: CONCERNS
+confidence: high
+
+review_type: code-review
+files_reviewed: 11
+lines_added: ~550
+
+acceptance_criteria:
+  total: 10
+  passed: 10
+  failed: 0
+  coverage: "100%"
+
+architecture_compliance:
+  enforcement_rules: "7/7 PASS"
+  anti_patterns: "0 found"
+  boundary_violations: "0 found"
+
+findings:
+  blockers: 0
+  concerns: 2
+  advisories: 2
+  info: 2
+
+concern_items:
+  - id: P2-F1
+    severity: medium
+    location: "db/models.rs:308,333-334,339"
+    description: |
+      update_tag 和 delete_tag 使用 AppError::NapCat 变体处理标签错误
+      （"标签不存在"、"系统标签不可删除"），错误 Display 输出为
+      "NapCat 错误: 标签不存在: 5" — 语义不匹配导致用户困惑。
+    recommendation: |
+      在 errors.rs 新增专用变体：
+      ```rust
+      #[error("标签错误: {0}")]
+      Tag(String),
+      ```
+      将 db/models.rs 中标签相关错误改为 AppError::Tag(...)。
+    blocking: false
+
+  - id: P2-F2
+    severity: medium
+    location: "TagManager.tsx:63-87"
+    description: |
+      "新建标签" Button 组件嵌套在外层 <button>（折叠切换器）内部，
+      形成 <button><button></button></button> 结构。
+      虽然 e.stopPropagation() 防止冒泡，但违反 HTML 规范（嵌套交互元素），
+      影响屏幕阅读器等辅助技术的正确解析。
+    recommendation: |
+      将外层折叠触发器改为非交互元素：
+      ```tsx
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => setCollapsed(!collapsed)}
+        onKeyDown={(e) => e.key === 'Enter' && setCollapsed(!collapsed)}
+        className="..."
+      >
+      ```
+      或将 "新建标签" 按钮移出折叠触发区域。
+    blocking: false
+
+advisory_items:
+  - id: P3-F1
+    severity: low
+    location: "FriendTagPopover.tsx:36-46"
+    description: |
+      selectedIds 由 useMemo(friendTags) 派生。快速连续切换两个标签时，
+      第二次 toggle 基于旧 friendTags 计算 next（第一次 setFriendTags 尚未完成），
+      导致第一次变更被第二次覆盖。正常使用概率低。
+    recommendation: "使用 useState 维护本地乐观状态，setFriendTags 成功后与 store 同步"
+    blocking: false
+
+  - id: P3-F2
+    severity: low
+    location: "types/friends.ts:21-30"
+    description: "CreateTagParams 和 UpdateTagParams 类型已定义但全项目无任何导入引用，属死代码"
+    recommendation: "使用或移除"
+    blocking: false
+
+info_items:
+  - id: P4-I1
+    location: "useFriendsStore.ts:64,73,88,104"
+    description: "Store 直接调用 invoke 而非 tauri.ts wrapper 函数，与 6.1 模式一致（Dev Notes 明确为设计选择）"
+    blocking: false
+
+  - id: P4-I2
+    location: "TagManager.tsx:17,25"
+    description: "使用 (typeof tags)[0] 类型推断而非直接导入 TagInfo 类型，功能正确"
+    blocking: false
+
+summary: |
+  实现质量整体良好。10/10 验收标准全部通过。后端 4 个 CRUD 函数正确遵循
+  db/models.rs 唯一数据库访问点规则（吸取 6.1 P2-F1 教训），4 个 Tauri commands
+  签名合规，serde camelCase 完整，无 println/unwrap/expect。
+  前端 3 个新组件遵循项目模式（Zustand/shadcn/CSS变量/toast），
+  TagEditDialog 使用 key 重挂载模式（避免 useEffect+setState），FriendTagPopover
+  使用 useMemo 驱动。
+  2 个 P2 关注点：错误类型语义（NapCat variant 用于 Tag 错误）和嵌套 button（HTML 合规），
+  均不阻塞发布但建议后续修复。
+  建议状态: Ready for Done（P2 不阻塞发布）。
+
+reviewed_at: "2026-03-14"

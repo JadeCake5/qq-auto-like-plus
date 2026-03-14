@@ -1,0 +1,107 @@
+# QA Gate Decision — Story 6.3
+# Generated: 2026-03-14
+# Reviewer: Quinn (Test Architect)
+
+story: "6.3"
+title: "基于标签的点赞策略"
+epic: 6
+status: Ready for Review → QA Reviewed
+
+gate_decision: PASS
+confidence: high
+
+review_type: code-review
+files_reviewed: 13
+lines_added: ~650
+
+acceptance_criteria:
+  total: 9
+  passed: 9
+  failed: 0
+  coverage: "100%"
+
+architecture_compliance:
+  enforcement_rules: "7/7 PASS"
+  anti_patterns: "0 found"
+  boundary_violations: "0 found"
+
+findings:
+  blockers: 0
+  concerns: 0
+  advisories: 2
+  info: 2
+
+advisory_items:
+  - id: P3-F1
+    severity: low
+    location: "friends/strategy.rs:43"
+    description: |
+      `.unwrap()` on `min_by_key()` result — guarded by `if friend.tags.is_empty()`
+      early return so logically safe, but architecture rule states
+      "禁止 unwrap()/expect() 在生产代码". Defensive alternative:
+      `if let Some(best_tag) = ...` or `.expect("tags guaranteed non-empty")` with
+      comment.
+    recommendation: "Replace with `if let Some` or add comment justifying safety"
+    blocking: false
+
+  - id: P3-F2
+    severity: low
+    location: "engine/reply_handler.rs:62,144"
+    description: |
+      `resolve_friend_strategy()` called with `default_times=0` as placeholder,
+      then `tag_like_times > 0` used as sentinel check to decide tag override vs
+      global config. Relies on validation ensuring like_times ∈ [1,20], making 0
+      a safe sentinel. Pattern is fragile if validation range changes later.
+    recommendation: |
+      Consider returning `Option<i32>` from the tag strategy check instead of
+      using 0 as sentinel. Lower priority since validation guarantees [1,20].
+    blocking: false
+
+info_items:
+  - id: P4-I1
+    location: "db/models.rs:486,491"
+    description: |
+      `AppError::NapCat` used for tag validation errors ("无效的优先级",
+      "点赞次数必须在 1-20 之间"). Carry-forward from Story 6.2 P2-F1 —
+      story spec explicitly defers fix to dedicated error-variant story.
+    blocking: false
+
+  - id: P4-I2
+    location: "useFriendsStore.ts:117"
+    description: |
+      Store directly calls invoke() instead of tauri.ts wrapper function.
+      Carry-forward from Story 6.2 P4-I1 — consistent project-wide pattern.
+    blocking: false
+
+summary: |
+  实现质量优秀。9/9 验收标准全部通过，0 个 P1/P2 问题。
+
+  **后端核心:**
+  - strategy.rs 策略解析逻辑正确：多标签取最高优先级 (min_by_key)，
+    auto_like/auto_reply 采用 all() 语义（任一 false 即 false），
+    like_times 取最高优先级标签值
+  - build_like_queue 正确实现优先级排序 + 同级随机打乱
+  - like_executor.rs 重构干净：复用已有 upsert → 读 friends_with_tags →
+    build_like_queue，循环内正确使用 strat.like_times 替代全局值
+  - reply_handler.rs 标签回赞检查位置正确（reply_enabled 之后、already_liked 之前），
+    auto_reply=false 时正确跳过并 emit skip reason
+  - DB migration 正确扩展 tags 表 4 列 + 系统标签默认策略
+  - update_tag_strategy 包含 priority 枚举验证 + like_times 范围验证
+  - get_friend_tags 新函数支持按 user_id 查询标签（回赞场景使用）
+  - 所有 TagRow 查询（6 处）已统一扩展为 8 列
+
+  **前端:**
+  - TagEditDialog 策略区域布局合理（分隔线 + 优先级按钮组 + 数值输入 + Switch）
+  - 两步保存逻辑正确：先 name/color 再 strategy，step2 失败不关闭弹窗
+  - 前端验证与后端验证一致 (like_times 1-20)
+  - Switch 组件直接复用已有 base-ui，未引入新依赖
+
+  **与 6.2 QA 发现的关系:**
+  - P2-F1 (AppError::NapCat misuse): 本 Story 延续使用，符合 spec 约定
+  - P2-F2 (nested button): 本 Story 未修改 TagManager，不影响
+  - P3-F1 (FriendTagPopover race): 本 Story 未修改，不影响
+
+  2 个 P3 建议均为代码风格优化，不影响功能正确性。
+  建议状态: Ready for Done.
+
+reviewed_at: "2026-03-14"

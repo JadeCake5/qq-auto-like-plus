@@ -1,0 +1,143 @@
+# QA Gate Decision
+# Story: 2.3 - 定时批量点赞执行器
+# Generated: 2026-03-13
+
+story_id: "2.3"
+story_title: "定时批量点赞执行器"
+epic: "Epic 2: 核心点赞引擎与名额管理"
+reviewer: "Quinn (Test Architect) — Claude Opus 4.6"
+review_date: "2026-03-13"
+
+# Gate Decision: PASS | CONCERNS | FAIL | WAIVED
+gate_decision: PASS
+
+decision_rationale: |
+  Story 2.3 实现质量优秀，11 项 AC 全部通过验证。cargo check 通过（0 errors，
+  9 warnings 全部为 unused library code），tsc --noEmit 零错误。
+
+  核心批量点赞引擎实现正确：
+  - 好友列表获取 → 随机打乱 → 逐个点赞 → 进度推送 → 完成通知
+  - DB 锁正确使用 {} 作用域限制，不跨 await 持有 MutexGuard
+  - rand::rng() 限制在 {} 作用域内避免 ThreadRng 跨 await
+  - AtomicBool 防重复触发 + tokio::spawn 后台执行
+
+  Story 2.2 QA 遗留 3 项全部修复验证通过：
+  - M1: has_liked_today 改为范围查询命中复合索引
+  - M2: quota 函数新增 _for_date 变体，批量执行器统一获取一次 date
+  - L4: quota.rs 关键路径添加 tracing 日志
+
+  架构合规性满分：
+  - 严格遵守 commands → engine → db 分层边界
+  - 所有新 Rust 结构体标注 serde(rename_all = "camelCase")
+  - Tauri command 返回 Result<T, String>
+  - 事件命名 like:progress / like:batch-complete / like:batch-error
+  - 无 println!/unwrap()/expect()（非初始化代码）
+
+  给出 PASS 的原因：唯一 1 个 Medium issue（名额预消耗浪费）为非阻塞的设计取舍，
+  正常运行下不影响功能，仅在 NapCat 崩溃极端场景下有影响。
+
+# Verification Results
+verification:
+  cargo_check: PASS  # 0 errors, 9 warnings (all unused library code)
+  tsc_noEmit: PASS   # zero errors
+  ac_coverage: "11/11 PASS"
+  architecture_compliance: PASS
+  naming_conventions: PASS
+  error_handling: PASS
+  db_boundary: PASS  # all DB access through models
+  db_lock_safety: PASS  # MutexGuard scoped with {}, never crosses await
+  command_layering: PASS  # commands → engine → db
+  event_naming: PASS  # like:progress, like:batch-complete, like:batch-error
+  previous_lessons_applied: PASS  # Story 2.2 M1, M2, L4 all fixed
+
+# AC Matrix
+acceptance_criteria:
+  ac1_get_friend_list: PASS
+  ac2_random_shuffle: PASS
+  ac3_batch_interval: PASS
+  ac4_times_per_friend: PASS
+  ac5_skip_already_liked: PASS
+  ac6_quota_check_and_stop: PASS
+  ac7_record_history_and_daily_state: PASS
+  ac8_single_failure_continues: PASS
+  ac9_progress_event: PASS
+  ac10_batch_complete_event: PASS
+  ac11_friends_table: PASS
+
+# Story 2.2 QA Fix Verification
+story_2_2_qa_fixes:
+  m1_range_query: PASS  # models.rs has_liked_today uses >= and <= range query
+  m2_date_parameter: PASS  # _for_date variants + single today() call in executor
+  l4_tracing_logs: PASS  # tracing::warn/debug added to quota exhaustion paths
+
+# Issues Summary
+issues:
+  high: 0
+  medium: 1
+  low: 4
+
+medium_issues:
+  - id: M1
+    title: "名额在 API 调用前预消耗 — 失败时浪费名额"
+    file: "engine/like_executor.rs:111-133"
+    blocking: false
+    recommendation: |
+      当前流程: try_consume_quota_for_date → send_like → record_like
+      如果 send_like 失败（如 NapCat 崩溃），名额已被扣减但实际未点赞成功。
+      若 NapCat 在第 10 个好友后崩溃，剩余 40 个好友的名额全部浪费。
+      建议之一：添加连续失败检测（3-5 次连续 API 失败后提前终止批量流程）。
+      建议之二：改为 API 成功后再消耗名额（当前 AtomicBool 单线程保护下无竞态风险）。
+
+low_issues:
+  - id: L1
+    title: "AppError::NapCat 用于 Mutex PoisonError — 语义不精确"
+    file: "engine/like_executor.rs:44,64,93,112,156"
+    blocking: false
+    recommendation: |
+      db.lock().map_err(|e| AppError::NapCat(e.to_string())) 将 Mutex 中毒错误
+      包装为 NapCat 错误。Dev Notes 已提及。建议后续添加 AppError::LockError(String)。
+  - id: L2
+    title: "engine/mod.rs re-exports 产生 unused warnings"
+    file: "engine/mod.rs:4-5"
+    blocking: false
+    recommendation: |
+      pub use quota::QuotaStatus 和 pub use like_executor::{...} 未被消费。
+      将在后续 story 使用时自动消除。
+  - id: L3
+    title: "has_liked_today 边界精度 — <= 23:59:59 vs < next_date"
+    file: "db/models.rs:221"
+    blocking: false
+    recommendation: |
+      使用 created_at <= '{date} 23:59:59' 而非 < '{next_date} 00:00:00'。
+      因 SQLite CURRENT_TIMESTAMP 无亚秒精度，功能等价。但 < next_date 更通用。
+  - id: L4
+    title: "friends.clone() 可优化为 move"
+    file: "engine/like_executor.rs:76"
+    blocking: false
+    recommendation: |
+      upsert_friends_batch 在 clone 之前已完成，可改为 let mut shuffled = friends;
+      避免一次内存分配。微优化，500 好友约 50KB。
+
+# Risk Assessment
+risk_level: LOW
+risk_factors:
+  - "名额预消耗设计在 NapCat 崩溃时会浪费名额（M1）"
+  - "Library code re-exports 产生 unused warnings，后续 story 消费后消除"
+
+# Code Quality
+code_quality:
+  correctness: 9
+  architecture: 10
+  security: 10
+  maintainability: 9
+  test_readiness: 8
+
+# Noted Deviations
+deviations: []
+
+# Recommendation
+recommendation: |
+  PROCEED to Story 2.4。本 Story 批量点赞引擎实现质量优秀，
+  Story 2.2 QA 遗留全部修复，架构合规性满分。
+  - M1 (建议): 后续可在 Story 2.4 或 3.3 中添加连续失败检测机制
+  - L1-L4: 非阻塞，可在后续迭代中渐进修复

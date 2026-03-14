@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QQ Auto Like Plus — Design Direction Mockups</title>
+<style>
+  :root {
+    --bg-base: #1a1625;
+    --bg-card: #231f31;
+    --bg-elevated: #2d2840;
+    --bg-nav: #16121f;
+    --primary: #f2a7c3;
+    --secondary: #a7c7f2;
+    --accent: #c3a7f2;
+    --mint: #a7f2d4;
+    --peach: #f2cfa7;
+    --coral: #f28b8b;
+    --text-primary: #f0edf5;
+    --text-secondary: #9b95a8;
+    --text-muted: #6b6578;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei UI", sans-serif;
+    background: #0e0b14;
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+
+  /* ===== Page Header ===== */
+  .page-header {
+    text-align: center;
+    padding: 48px 24px 32px;
+    background: linear-gradient(180deg, #231f31 0%, #0e0b14 100%);
+  }
+  .page-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary), var(--accent), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  .page-header p { color: var(--text-secondary); font-size: 14px; }
+
+  /* ===== Direction Selector ===== */
+  .direction-nav {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 24px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    background: rgba(14,11,20,0.95);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+    border-bottom: 1px solid rgba(195,167,242,0.1);
+  }
+  .direction-nav button {
+    background: var(--bg-card);
+    border: 1px solid rgba(195,167,242,0.15);
+    color: var(--text-secondary);
+    padding: 8px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .direction-nav button:hover {
+    border-color: var(--primary);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+  }
+  .direction-nav button.active {
+    background: linear-gradient(135deg, rgba(242,167,195,0.2), rgba(195,167,242,0.2));
+    border-color: var(--primary);
+    color: var(--text-primary);
+  }
+
+  /* ===== Mockup Container ===== */
+  .mockup-section {
+    display: none;
+    padding: 32px 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .mockup-section.active { display: block; }
+
+  .mockup-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .mockup-desc {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+  .mockup-tags {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .mockup-tags span {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 99px;
+    background: rgba(195,167,242,0.12);
+    color: var(--accent);
+  }
+
+  /* ===== Mockup Frame (900x600) ===== */
+  .mockup-frame {
+    width: 900px;
+    height: 600px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(195,167,242,0.1);
+    margin: 0 auto 40px;
+    position: relative;
+  }
+
+  /* ===== Direction 1: Classic Dashboard ===== */
+  .d1 { display: flex; background: var(--bg-base); }
+  .d1 .sidebar {
+    width: 56px;
+    background: var(--bg-nav);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 0;
+    gap: 4px;
+  }
+  .d1 .sidebar .nav-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-muted);
+  }
+  .d1 .sidebar .nav-icon:hover { background: rgba(242,167,195,0.1); color: var(--text-secondary); }
+  .d1 .sidebar .nav-icon.active { background: rgba(242,167,195,0.15); color: var(--primary); }
+  .d1 .sidebar .spacer { flex: 1; }
+  .d1 .sidebar .mascot-mini {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-top: 8px;
+  }
+  .d1 .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .d1 .topbar {
+    height: 40px;
+    background: var(--bg-card);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 12px;
+    border-bottom: 1px solid rgba(195,167,242,0.06);
+  }
+  .d1 .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--mint);
+    box-shadow: 0 0 8px rgba(167,242,212,0.5);
+  }
+  .d1 .topbar-text { font-size: 12px; color: var(--text-secondary); }
+  .d1 .topbar .spacer { flex: 1; }
+  .d1 .topbar .avatar {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--secondary), var(--mint));
+  }
+  .d1 .content {
+    flex: 1;
+    padding: 20px;
+    overflow: auto;
+  }
+  .d1 .page-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+  .d1 .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .d1 .stat-card {
+    border-radius: 14px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .d1 .stat-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.12;
+    border-radius: 14px;
+  }
+  .d1 .stat-card.pink { background: linear-gradient(135deg, rgba(242,167,195,0.2), rgba(195,167,242,0.15)); }
+  .d1 .stat-card.blue { background: linear-gradient(135deg, rgba(167,199,242,0.2), rgba(167,242,212,0.15)); }
+  .d1 .stat-card.purple { background: linear-gradient(135deg, rgba(195,167,242,0.2), rgba(242,167,195,0.15)); }
+  .d1 .stat-label { font-size: 11px; color: var(--text-secondary); letter-spacing: 0.5px; }
+  .d1 .stat-value { font-size: 28px; font-weight: 700; margin: 4px 0; }
+  .d1 .stat-card.pink .stat-value { color: var(--primary); }
+  .d1 .stat-card.blue .stat-value { color: var(--secondary); }
+  .d1 .stat-card.purple .stat-value { color: var(--accent); }
+  .d1 .stat-sub { font-size: 11px; color: var(--text-muted); }
+  .d1 .chart-area {
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 16px;
+    height: 200px;
+    display: flex;
+    flex-direction: column;
+  }
+  .d1 .chart-title { font-size: 14px; font-weight: 500; margin-bottom: 12px; }
+  .d1 .chart-placeholder {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 0 8px;
+  }
+  .d1 .chart-bar {
+    flex: 1;
+    border-radius: 6px 6px 0 0;
+    transition: all 0.3s;
+  }
+
+  /* ===== Direction 2: Mascot-Centric ===== */
+  .d2 { display: flex; background: var(--bg-base); }
+  .d2 .sidebar {
+    width: 56px;
+    background: var(--bg-nav);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 0;
+    gap: 4px;
+  }
+  .d2 .sidebar .nav-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--text-muted);
+  }
+  .d2 .sidebar .nav-icon.active { background: rgba(242,167,195,0.15); color: var(--primary); }
+  .d2 .sidebar .spacer { flex: 1; }
+  .d2 .main { flex: 1; display: flex; flex-direction: column; }
+  .d2 .topbar {
+    height: 36px;
+    background: var(--bg-card);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(195,167,242,0.06);
+  }
+  .d2 .content {
+    flex: 1;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 200px;
+    gap: 16px;
+  }
+  .d2 .left-col { display: flex; flex-direction: column; gap: 12px; }
+  .d2 .right-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .d2 .mascot-area {
+    width: 180px;
+    height: 200px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(242,167,195,0.1), rgba(195,167,242,0.1));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid rgba(242,167,195,0.1);
+  }
+  .d2 .mascot-face {
+    font-size: 64px;
+    line-height: 1;
+  }
+  .d2 .mascot-speech {
+    font-size: 12px;
+    color: var(--primary);
+    background: rgba(242,167,195,0.1);
+    padding: 6px 12px;
+    border-radius: 10px;
+    text-align: center;
+  }
+  .d2 .mascot-status {
+    font-size: 11px;
+    color: var(--mint);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .d2 .mini-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+  .d2 .mini-stat {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 10px;
+    text-align: center;
+  }
+  .d2 .mini-stat-val { font-size: 18px; font-weight: 700; color: var(--primary); }
+  .d2 .mini-stat-label { font-size: 10px; color: var(--text-muted); }
+  .d2 .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .d2 .stat-card {
+    border-radius: 14px;
+    padding: 14px;
+  }
+  .d2 .stat-card.pink { background: linear-gradient(135deg, rgba(242,167,195,0.2), rgba(195,167,242,0.1)); }
+  .d2 .stat-card.blue { background: linear-gradient(135deg, rgba(167,199,242,0.2), rgba(167,242,212,0.1)); }
+  .d2 .stat-card.purple { background: linear-gradient(135deg, rgba(195,167,242,0.2), rgba(242,167,195,0.1)); }
+  .d2 .stat-label { font-size: 11px; color: var(--text-secondary); }
+  .d2 .stat-value { font-size: 24px; font-weight: 700; }
+  .d2 .stat-card.pink .stat-value { color: var(--primary); }
+  .d2 .stat-card.blue .stat-value { color: var(--secondary); }
+  .d2 .stat-card.purple .stat-value { color: var(--accent); }
+
+  /* ===== Direction 3: Glassmorphism ===== */
+  .d3 {
+    display: flex;
+    background: var(--bg-base);
+    background-image:
+      radial-gradient(ellipse at 20% 80%, rgba(242,167,195,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(167,199,242,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(195,167,242,0.05) 0%, transparent 60%);
+  }
+  .d3 .sidebar {
+    width: 56px;
+    background: rgba(22,18,31,0.8);
+    backdrop-filter: blur(16px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 0;
+    gap: 4px;
+    border-right: 1px solid rgba(195,167,242,0.08);
+  }
+  .d3 .sidebar .nav-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--text-muted);
+  }
+  .d3 .sidebar .nav-icon.active {
+    background: rgba(242,167,195,0.12);
+    color: var(--primary);
+  }
+  .d3 .sidebar .spacer { flex: 1; }
+  .d3 .main { flex: 1; display: flex; flex-direction: column; }
+  .d3 .topbar {
+    height: 40px;
+    background: rgba(35,31,49,0.6);
+    backdrop-filter: blur(16px);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(195,167,242,0.06);
+  }
+  .d3 .content {
+    flex: 1;
+    padding: 20px;
+    overflow: auto;
+  }
+  .d3 .glass-card {
+    background: rgba(35,31,49,0.5);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(195,167,242,0.1);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .d3 .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .d3 .stat-glass {
+    background: rgba(35,31,49,0.4);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(195,167,242,0.08);
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+  }
+  .d3 .stat-glass .val { font-size: 26px; font-weight: 700; }
+  .d3 .stat-glass .lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .d3 .stat-glass:nth-child(1) .val { color: var(--primary); }
+  .d3 .stat-glass:nth-child(2) .val { color: var(--secondary); }
+  .d3 .stat-glass:nth-child(3) .val { color: var(--accent); }
+  .d3 .stat-glass:nth-child(4) .val { color: var(--mint); }
+
+  /* ===== Direction 4: Gradient Flow ===== */
+  .d4 {
+    display: flex;
+    background: linear-gradient(160deg, #1a1625 0%, #1e1530 40%, #1a1625 100%);
+  }
+  .d4 .sidebar {
+    width: 64px;
+    background: linear-gradient(180deg, rgba(22,18,31,0.9), rgba(26,22,37,0.9));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    gap: 8px;
+  }
+  .d4 .sidebar .nav-dot {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: var(--text-muted);
+    transition: all 0.3s;
+  }
+  .d4 .sidebar .nav-dot.active {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: white;
+    box-shadow: 0 4px 16px rgba(242,167,195,0.3);
+  }
+  .d4 .sidebar .spacer { flex: 1; }
+  .d4 .main { flex: 1; display: flex; flex-direction: column; }
+  .d4 .hero-banner {
+    height: 120px;
+    background: linear-gradient(135deg, rgba(242,167,195,0.15), rgba(195,167,242,0.15), rgba(167,199,242,0.15));
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 20px;
+  }
+  .d4 .hero-mascot { font-size: 56px; }
+  .d4 .hero-info h2 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .d4 .hero-info p {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .d4 .hero-stats {
+    margin-left: auto;
+    display: flex;
+    gap: 24px;
+  }
+  .d4 .hero-stat { text-align: center; }
+  .d4 .hero-stat .val {
+    font-size: 24px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .d4 .hero-stat .lbl { font-size: 10px; color: var(--text-muted); }
+  .d4 .content {
+    flex: 1;
+    padding: 16px 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-content: start;
+  }
+  .d4 .flow-card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 16px;
+    border: 1px solid rgba(195,167,242,0.06);
+  }
+  .d4 .flow-card.full { grid-column: 1 / -1; }
+  .d4 .flow-card h3 {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  /* ===== Direction 5: Compact Hub ===== */
+  .d5 { display: flex; background: var(--bg-base); }
+  .d5 .sidebar {
+    width: 48px;
+    background: var(--bg-nav);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 0;
+    gap: 2px;
+  }
+  .d5 .sidebar .nav-icon {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    color: var(--text-muted);
+  }
+  .d5 .sidebar .nav-icon.active { background: rgba(242,167,195,0.15); color: var(--primary); }
+  .d5 .sidebar .spacer { flex: 1; }
+  .d5 .main { flex: 1; display: flex; flex-direction: column; }
+  .d5 .topbar {
+    height: 32px;
+    background: var(--bg-card);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(195,167,242,0.06);
+  }
+  .d5 .content {
+    flex: 1;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: auto 1fr 1fr;
+    gap: 8px;
+    align-content: start;
+  }
+  .d5 .compact-stat {
+    background: var(--bg-card);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .d5 .compact-stat .icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  .d5 .compact-stat .icon.pink { background: rgba(242,167,195,0.15); }
+  .d5 .compact-stat .icon.blue { background: rgba(167,199,242,0.15); }
+  .d5 .compact-stat .icon.purple { background: rgba(195,167,242,0.15); }
+  .d5 .compact-stat .icon.mint { background: rgba(167,242,212,0.15); }
+  .d5 .compact-stat .val { font-size: 16px; font-weight: 700; }
+  .d5 .compact-stat .lbl { font-size: 10px; color: var(--text-muted); }
+  .d5 .compact-card {
+    background: var(--bg-card);
+    border-radius: 10px;
+    padding: 10px 12px;
+    grid-column: span 2;
+  }
+  .d5 .compact-card h3 { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+
+  /* ===== Direction 6: Minimal Zen ===== */
+  .d6 { display: flex; background: #191422; }
+  .d6 .sidebar {
+    width: 60px;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 0;
+    gap: 12px;
+    border-right: 1px solid rgba(195,167,242,0.04);
+  }
+  .d6 .sidebar .nav-icon {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: var(--text-muted);
+  }
+  .d6 .sidebar .nav-icon.active { color: var(--primary); }
+  .d6 .sidebar .spacer { flex: 1; }
+  .d6 .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+  }
+  .d6 .zen-center {
+    text-align: center;
+    max-width: 500px;
+  }
+  .d6 .zen-mascot { font-size: 72px; margin-bottom: 16px; }
+  .d6 .zen-greeting {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .d6 .zen-status {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+  }
+  .d6 .zen-stats {
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+  .d6 .zen-stat { text-align: center; }
+  .d6 .zen-stat .val { font-size: 32px; font-weight: 700; }
+  .d6 .zen-stat:nth-child(1) .val { color: var(--primary); }
+  .d6 .zen-stat:nth-child(2) .val { color: var(--secondary); }
+  .d6 .zen-stat:nth-child(3) .val { color: var(--mint); }
+  .d6 .zen-stat .lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .d6 .zen-ring {
+    width: 320px; height: 4px;
+    background: var(--bg-card);
+    border-radius: 99px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+  .d6 .zen-ring-fill {
+    width: 72%;
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--primary), var(--accent), var(--secondary));
+  }
+
+  /* ===== Comparison View ===== */
+  .comparison-grid {
+    display: none;
+    padding: 32px 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .comparison-grid.active { display: block; }
+  .comparison-grid h2 {
+    text-align: center;
+    font-size: 20px;
+    margin-bottom: 24px;
+  }
+  .comp-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .comp-cell {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .comp-cell:hover { transform: scale(1.02); }
+  .comp-cell .mini-frame {
+    width: 100%;
+    aspect-ratio: 900/600;
+    transform-origin: top left;
+    pointer-events: none;
+  }
+  .comp-label {
+    padding: 8px 12px;
+    background: var(--bg-card);
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: center;
+  }
+
+  /* ===== Traits Table ===== */
+  .traits-table {
+    margin-top: 32px;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .traits-table th {
+    background: var(--bg-card);
+    padding: 10px 12px;
+    text-align: left;
+    color: var(--text-secondary);
+    font-weight: 500;
+    border-bottom: 1px solid rgba(195,167,242,0.08);
+  }
+  .traits-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(195,167,242,0.04);
+    color: var(--text-secondary);
+  }
+  .traits-table td:first-child { color: var(--text-primary); font-weight: 500; }
+  .traits-table .star { color: var(--primary); }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>QQ Auto Like Plus — Design Directions</h1>
+  <p>6 种设计方向探索 | 900x600 桌面窗口 | Kawaii/ACG 暗色美学</p>
+</div>
+
+<nav class="direction-nav">
+  <button class="active" onclick="showDirection('d1')">1. 经典仪表盘</button>
+  <button onclick="showDirection('d2')">2. Mascot 中心</button>
+  <button onclick="showDirection('d3')">3. 毛玻璃拟态</button>
+  <button onclick="showDirection('d4')">4. 渐变流动</button>
+  <button onclick="showDirection('d5')">5. 紧凑枢纽</button>
+  <button onclick="showDirection('d6')">6. 极简禅意</button>
+  <button onclick="showDirection('compare')">对比视图</button>
+</nav>
+
+<!-- Direction 1: Classic Dashboard -->
+<section class="mockup-section active" id="sec-d1">
+  <h2 class="mockup-title">Direction 1: 经典仪表盘</h2>
+  <p class="mockup-desc">
+    经典的侧边栏导航 + 顶部状态条 + 卡片式仪表盘布局。信息层级清晰，用户对此模式极其熟悉。
+    统计卡片使用马卡龙渐变色，图表区占据主要空间。Mascot 以缩略图标形式嵌入侧边栏底部。
+  </p>
+  <div class="mockup-tags">
+    <span>信息优先</span>
+    <span>清晰层级</span>
+    <span>经典布局</span>
+    <span>技术宅友好</span>
+  </div>
+  <div class="mockup-frame">
+    <div class="d1">
+      <div class="sidebar">
+        <div class="nav-icon active">📊</div>
+        <div class="nav-icon">👥</div>
+        <div class="nav-icon">🏷️</div>
+        <div class="nav-icon">📋</div>
+        <div class="spacer"></div>
+        <div class="nav-icon">⚙️</div>
+        <div class="mascot-mini">🐱</div>
+      </div>
+      <div class="main">
+        <div class="topbar">
+          <div class="status-dot"></div>
+          <span class="topbar-text">运行中 · 已连接 12:34:56</span>
+          <div class="spacer"></div>
+          <span class="topbar-text">小号昵称</span>
+          <div class="avatar"></div>
+        </div>
+        <div class="content">
+          <div class="page-title">仪表盘</div>
+          <div class="stats-grid">
+            <div class="stat-card pink">
+              <div class="stat-label">今日已赞</div>
+              <div class="stat-value">48</div>
+              <div class="stat-sub">/ 50 好友</div>
+            </div>
+            <div class="stat-card blue">
+              <div class="stat-label">剩余名额</div>
+              <div class="stat-value">152</div>
+              <div class="stat-sub">/ 200 每日上限</div>
+            </div>
+            <div class="stat-card purple">
+              <div class="stat-label">今日回赞</div>
+              <div class="stat-value">12</div>
+              <div class="stat-sub">↑ 20% vs 昨日</div>
+            </div>
+          </div>
+          <div class="chart-area">
+            <div class="chart-title">近 7 天点赞趋势</div>
+            <div class="chart-placeholder">
+              <div class="chart-bar" style="height:45%;background:linear-gradient(0,rgba(242,167,195,0.3),var(--primary))"></div>
+              <div class="chart-bar" style="height:60%;background:linear-gradient(0,rgba(242,167,195,0.3),var(--primary))"></div>
+              <div class="chart-bar" style="height:38%;background:linear-gradient(0,rgba(242,167,195,0.3),var(--primary))"></div>
+              <div class="chart-bar" style="height:72%;background:linear-gradient(0,rgba(242,167,195,0.3),var(--primary))"></div>
+              <div class="chart-bar" style="height:55%;background:linear-gradient(0,rgba(242,167,195,0.3),var(--primary))"></div>
+              <div class="chart-bar" style="height:80%;background:linear-gradient(0,rgba(242,167,195,0.3),var(--primary))"></div>
+              <div class="chart-bar" style="height:90%;background:linear-gradient(0,rgba(242,167,195,0.3),var(--primary))"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Direction 2: Mascot-Centric -->
+<section class="mockup-section" id="sec-d2">
+  <h2 class="mockup-title">Direction 2: Mascot 中心</h2>
+  <p class="mockup-desc">
+    将 Mascot 角色作为视觉焦点放在右侧专属区域，左侧展示数据。Mascot 根据运行状态切换表情和台词，
+    成为情感化交互的核心。统计数据环绕 Mascot 区域排列，营造「角色汇报工作」的氛围。
+  </p>
+  <div class="mockup-tags">
+    <span>情感优先</span>
+    <span>角色驱动</span>
+    <span>陪伴感</span>
+    <span>ミク酱友好</span>
+  </div>
+  <div class="mockup-frame">
+    <div class="d2">
+      <div class="sidebar">
+        <div class="nav-icon active">📊</div>
+        <div class="nav-icon">👥</div>
+        <div class="nav-icon">🏷️</div>
+        <div class="nav-icon">📋</div>
+        <div class="spacer"></div>
+        <div class="nav-icon">⚙️</div>
+      </div>
+      <div class="main">
+        <div class="topbar">
+          <span>🟢 运行中</span>
+          <span style="margin-left:auto">小号昵称</span>
+        </div>
+        <div class="content">
+          <div class="left-col">
+            <div style="font-size:18px;font-weight:700;margin-bottom:4px">仪表盘</div>
+            <div class="stats-row">
+              <div class="stat-card pink">
+                <div class="stat-label">今日已赞</div>
+                <div class="stat-value">48</div>
+              </div>
+              <div class="stat-card blue">
+                <div class="stat-label">剩余名额</div>
+                <div class="stat-value">152</div>
+              </div>
+              <div class="stat-card purple">
+                <div class="stat-label">今日回赞</div>
+                <div class="stat-value">12</div>
+              </div>
+            </div>
+            <div style="background:var(--bg-card);border-radius:14px;padding:14px;flex:1">
+              <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">近 7 天趋势</div>
+              <div style="display:flex;align-items:flex-end;gap:6px;height:120px;padding:0 4px">
+                <div style="flex:1;height:45%;border-radius:4px 4px 0 0;background:linear-gradient(0,rgba(167,199,242,0.2),var(--secondary))"></div>
+                <div style="flex:1;height:60%;border-radius:4px 4px 0 0;background:linear-gradient(0,rgba(167,199,242,0.2),var(--secondary))"></div>
+                <div style="flex:1;height:38%;border-radius:4px 4px 0 0;background:linear-gradient(0,rgba(167,199,242,0.2),var(--secondary))"></div>
+                <div style="flex:1;height:72%;border-radius:4px 4px 0 0;background:linear-gradient(0,rgba(167,199,242,0.2),var(--secondary))"></div>
+                <div style="flex:1;height:55%;border-radius:4px 4px 0 0;background:linear-gradient(0,rgba(167,199,242,0.2),var(--secondary))"></div>
+                <div style="flex:1;height:80%;border-radius:4px 4px 0 0;background:linear-gradient(0,rgba(167,199,242,0.2),var(--secondary))"></div>
+                <div style="flex:1;height:90%;border-radius:4px 4px 0 0;background:linear-gradient(0,rgba(167,199,242,0.2),var(--secondary))"></div>
+              </div>
+            </div>
+          </div>
+          <div class="right-col">
+            <div class="mascot-area">
+              <div class="mascot-face">😺</div>
+              <div class="mascot-speech">今天也在努力点赞中~</div>
+              <div class="mascot-status">● 运行中</div>
+            </div>
+            <div class="mini-stats">
+              <div class="mini-stat">
+                <div class="mini-stat-val">350</div>
+                <div class="mini-stat-label">本周累计</div>
+              </div>
+              <div class="mini-stat">
+                <div class="mini-stat-val">98%</div>
+                <div class="mini-stat-label">成功率</div>
+              </div>
+              <div class="mini-stat">
+                <div class="mini-stat-val">7d</div>
+                <div class="mini-stat-label">连续运行</div>
+              </div>
+              <div class="mini-stat">
+                <div class="mini-stat-val">50</div>
+                <div class="mini-stat-label">好友总数</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Direction 3: Glassmorphism -->
+<section class="mockup-section" id="sec-d3">
+  <h2 class="mockup-title">Direction 3: 毛玻璃拟态</h2>
+  <p class="mockup-desc">
+    利用 CSS backdrop-filter 创造毛玻璃层叠效果，背景使用柔和的渐变光晕。
+    所有卡片呈半透明质感，营造轻盈梦幻的 ACG 氛围。4 列统计 + 全宽图表 + 活动流。
+  </p>
+  <div class="mockup-tags">
+    <span>梦幻质感</span>
+    <span>层叠透明</span>
+    <span>现代感</span>
+    <span>视觉沉浸</span>
+  </div>
+  <div class="mockup-frame">
+    <div class="d3">
+      <div class="sidebar">
+        <div class="nav-icon active">📊</div>
+        <div class="nav-icon">👥</div>
+        <div class="nav-icon">🏷️</div>
+        <div class="nav-icon">📋</div>
+        <div class="spacer"></div>
+        <div class="nav-icon">⚙️</div>
+      </div>
+      <div class="main">
+        <div class="topbar">
+          <span>🟢 运行中 · 已连接</span>
+          <span style="margin-left:auto">小号昵称</span>
+        </div>
+        <div class="content">
+          <div style="font-size:20px;font-weight:700;margin-bottom:16px">仪表盘</div>
+          <div class="stats-grid">
+            <div class="stat-glass"><div class="val">48</div><div class="lbl">今日已赞</div></div>
+            <div class="stat-glass"><div class="val">152</div><div class="lbl">剩余名额</div></div>
+            <div class="stat-glass"><div class="val">12</div><div class="lbl">今日回赞</div></div>
+            <div class="stat-glass"><div class="val">350</div><div class="lbl">本周累计</div></div>
+          </div>
+          <div class="glass-card">
+            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">近 7 天趋势</div>
+            <div style="display:flex;align-items:flex-end;gap:8px;height:130px">
+              <div style="flex:1;height:45%;border-radius:6px 6px 0 0;background:linear-gradient(0,rgba(242,167,195,0.15),rgba(242,167,195,0.5))"></div>
+              <div style="flex:1;height:60%;border-radius:6px 6px 0 0;background:linear-gradient(0,rgba(167,199,242,0.15),rgba(167,199,242,0.5))"></div>
+              <div style="flex:1;height:38%;border-radius:6px 6px 0 0;background:linear-gradient(0,rgba(195,167,242,0.15),rgba(195,167,242,0.5))"></div>
+              <div style="flex:1;height:72%;border-radius:6px 6px 0 0;background:linear-gradient(0,rgba(242,167,195,0.15),rgba(242,167,195,0.5))"></div>
+              <div style="flex:1;height:55%;border-radius:6px 6px 0 0;background:linear-gradient(0,rgba(167,199,242,0.15),rgba(167,199,242,0.5))"></div>
+              <div style="flex:1;height:80%;border-radius:6px 6px 0 0;background:linear-gradient(0,rgba(195,167,242,0.15),rgba(195,167,242,0.5))"></div>
+              <div style="flex:1;height:90%;border-radius:6px 6px 0 0;background:linear-gradient(0,rgba(242,167,195,0.15),rgba(242,167,195,0.5))"></div>
+            </div>
+          </div>
+          <div class="glass-card">
+            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">最近活动</div>
+            <div style="font-size:12px;color:var(--text-muted);line-height:2">
+              <div>✅ 已为 <span style="color:var(--primary)">好友A</span> 点赞 · 2 分钟前</div>
+              <div>✅ 已为 <span style="color:var(--secondary)">好友B</span> 点赞 · 5 分钟前</div>
+              <div>💜 收到 <span style="color:var(--accent)">好友C</span> 的回赞 · 12 分钟前</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Direction 4: Gradient Flow -->
+<section class="mockup-section" id="sec-d4">
+  <h2 class="mockup-title">Direction 4: 渐变流动</h2>
+  <p class="mockup-desc">
+    顶部 Hero Banner 融合 Mascot + 关键数据 + 渐变背景，营造沉浸式欢迎感。
+    侧边栏使用圆形导航按钮，选中态带有渐变发光效果。下方内容使用双列卡片网格。
+  </p>
+  <div class="mockup-tags">
+    <span>沉浸欢迎</span>
+    <span>Hero 横幅</span>
+    <span>渐变发光</span>
+    <span>米游社风</span>
+  </div>
+  <div class="mockup-frame">
+    <div class="d4">
+      <div class="sidebar">
+        <div class="nav-dot active">📊</div>
+        <div class="nav-dot">👥</div>
+        <div class="nav-dot">🏷️</div>
+        <div class="nav-dot">📋</div>
+        <div class="spacer"></div>
+        <div class="nav-dot">⚙️</div>
+      </div>
+      <div class="main">
+        <div class="hero-banner">
+          <div class="hero-mascot">😸</div>
+          <div class="hero-info">
+            <h2>今天也在努力~</h2>
+            <p>已连续运行 7 天 · 一切正常</p>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat"><div class="val">48</div><div class="lbl">今日已赞</div></div>
+            <div class="hero-stat"><div class="val">152</div><div class="lbl">剩余名额</div></div>
+            <div class="hero-stat"><div class="val">12</div><div class="lbl">今日回赞</div></div>
+          </div>
+        </div>
+        <div class="content">
+          <div class="flow-card">
+            <h3>近 7 天趋势</h3>
+            <div style="display:flex;align-items:flex-end;gap:6px;height:100px">
+              <div style="flex:1;height:45%;border-radius:4px 4px 0 0;background:linear-gradient(0,rgba(242,167,195,0.2),var(--primary))"></div>
+              <div style="flex:1;height:60%;border-radius:4px 4px 0 0;background:linear-gradient(0,rgba(242,167,195,0.2),var(--primary))"></div>
+              <div style="flex:1;height:38%;border-radius:4px 4px 0 0;background:linear-gradient(0,rgba(242,167,195,0.2),var(--primary))"></div>
+              <div style="flex:1;height:72%;border-radius:4px 4px 0 0;background:linear-gradient(0,rgba(242,167,195,0.2),var(--primary))"></div>
+              <div style="flex:1;height:55%;border-radius:4px 4px 0 0;background:linear-gradient(0,rgba(242,167,195,0.2),var(--primary))"></div>
+              <div style="flex:1;height:80%;border-radius:4px 4px 0 0;background:linear-gradient(0,rgba(242,167,195,0.2),var(--primary))"></div>
+              <div style="flex:1;height:90%;border-radius:4px 4px 0 0;background:linear-gradient(0,rgba(242,167,195,0.2),var(--primary))"></div>
+            </div>
+          </div>
+          <div class="flow-card">
+            <h3>好友分组</h3>
+            <div style="font-size:12px;color:var(--text-muted);line-height:2.2">
+              <div><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--primary);margin-right:6px"></span>最近联系 <span style="float:right;color:var(--text-secondary)">23 人</span></div>
+              <div><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--secondary);margin-right:6px"></span>同学 <span style="float:right;color:var(--text-secondary)">15 人</span></div>
+              <div><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:6px"></span>同事 <span style="float:right;color:var(--text-secondary)">12 人</span></div>
+            </div>
+          </div>
+          <div class="flow-card full">
+            <h3>最近活动</h3>
+            <div style="font-size:12px;color:var(--text-muted);display:flex;gap:24px">
+              <div style="flex:1;line-height:2">
+                <div>✅ 好友A · 2 分钟前</div>
+                <div>✅ 好友B · 5 分钟前</div>
+              </div>
+              <div style="flex:1;line-height:2">
+                <div>💜 好友C 回赞 · 12 分钟前</div>
+                <div>✅ 好友D · 18 分钟前</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Direction 5: Compact Hub -->
+<section class="mockup-section" id="sec-d5">
+  <h2 class="mockup-title">Direction 5: 紧凑枢纽</h2>
+  <p class="mockup-desc">
+    最大化信息密度，减少装饰元素。窄侧边栏 + 4 列网格 + 紧凑卡片。
+    适合技术宅太郎用户，快速获取所有数据。每个区域都高度利用空间。
+  </p>
+  <div class="mockup-tags">
+    <span>高信息密度</span>
+    <span>数据优先</span>
+    <span>高效操作</span>
+    <span>技术宅向</span>
+  </div>
+  <div class="mockup-frame">
+    <div class="d5">
+      <div class="sidebar">
+        <div class="nav-icon active">📊</div>
+        <div class="nav-icon">👥</div>
+        <div class="nav-icon">🏷️</div>
+        <div class="nav-icon">📋</div>
+        <div class="spacer"></div>
+        <div class="nav-icon">⚙️</div>
+      </div>
+      <div class="main">
+        <div class="topbar">
+          <span>🟢</span>
+          <span>运行中</span>
+          <span>·</span>
+          <span>7d 12h</span>
+          <span style="margin-left:auto">小号昵称 · 50 好友</span>
+        </div>
+        <div class="content">
+          <div class="compact-stat">
+            <div class="icon pink">💗</div>
+            <div><div class="val" style="color:var(--primary)">48</div><div class="lbl">今日已赞</div></div>
+          </div>
+          <div class="compact-stat">
+            <div class="icon blue">📋</div>
+            <div><div class="val" style="color:var(--secondary)">152</div><div class="lbl">剩余名额</div></div>
+          </div>
+          <div class="compact-stat">
+            <div class="icon purple">💜</div>
+            <div><div class="val" style="color:var(--accent)">12</div><div class="lbl">今日回赞</div></div>
+          </div>
+          <div class="compact-stat">
+            <div class="icon mint">✅</div>
+            <div><div class="val" style="color:var(--mint)">98%</div><div class="lbl">成功率</div></div>
+          </div>
+          <div class="compact-card">
+            <h3>近 7 天趋势</h3>
+            <div style="display:flex;align-items:flex-end;gap:4px;height:120px">
+              <div style="flex:1;height:45%;border-radius:3px 3px 0 0;background:var(--primary)"></div>
+              <div style="flex:1;height:60%;border-radius:3px 3px 0 0;background:var(--primary)"></div>
+              <div style="flex:1;height:38%;border-radius:3px 3px 0 0;background:var(--primary)"></div>
+              <div style="flex:1;height:72%;border-radius:3px 3px 0 0;background:var(--primary)"></div>
+              <div style="flex:1;height:55%;border-radius:3px 3px 0 0;background:var(--primary)"></div>
+              <div style="flex:1;height:80%;border-radius:3px 3px 0 0;background:var(--primary)"></div>
+              <div style="flex:1;height:90%;border-radius:3px 3px 0 0;background:var(--primary)"></div>
+            </div>
+          </div>
+          <div class="compact-card">
+            <h3>好友列表 (50)</h3>
+            <div style="font-size:11px;color:var(--text-muted);line-height:1.8">
+              <div>好友A <span style="color:var(--mint)">✓</span> · 好友B <span style="color:var(--mint)">✓</span> · 好友C <span style="color:var(--text-muted)">...</span></div>
+              <div>好友D <span style="color:var(--mint)">✓</span> · 好友E <span style="color:var(--mint)">✓</span> · 好友F <span style="color:var(--mint)">✓</span></div>
+              <div>好友G <span style="color:var(--peach)">⏳</span> · 好友H <span style="color:var(--peach)">⏳</span></div>
+            </div>
+          </div>
+          <div class="compact-card">
+            <h3>活动日志</h3>
+            <div style="font-size:11px;color:var(--text-muted);line-height:1.8;font-family:'JetBrains Mono',monospace">
+              <div><span style="color:var(--text-muted)">12:34</span> <span style="color:var(--mint)">OK</span> send_like 好友A</div>
+              <div><span style="color:var(--text-muted)">12:35</span> <span style="color:var(--mint)">OK</span> send_like 好友B</div>
+              <div><span style="color:var(--text-muted)">12:36</span> <span style="color:var(--accent)">IN</span> recv_like 好友C</div>
+            </div>
+          </div>
+          <div class="compact-card">
+            <h3>系统状态</h3>
+            <div style="font-size:11px;color:var(--text-muted);line-height:1.8">
+              <div>NapCat <span style="color:var(--mint)">● 在线</span></div>
+              <div>内存 <span style="color:var(--text-secondary)">45 MB</span></div>
+              <div>下次执行 <span style="color:var(--text-secondary)">13:00</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Direction 6: Minimal Zen -->
+<section class="mockup-section" id="sec-d6">
+  <h2 class="mockup-title">Direction 6: 极简禅意</h2>
+  <p class="mockup-desc">
+    极致简化，中心化布局。大尺寸 Mascot + 核心三数据 + 进度条。
+    贯彻「设置一次，安心遗忘」的产品理念——打开面板只需一秒确认一切正常。
+    最符合 ミク酱 用户「可爱 + 简单」的核心诉求。
+  </p>
+  <div class="mockup-tags">
+    <span>极致简约</span>
+    <span>中心聚焦</span>
+    <span>一秒确认</span>
+    <span>情感至上</span>
+  </div>
+  <div class="mockup-frame">
+    <div class="d6">
+      <div class="sidebar">
+        <div class="nav-icon active">📊</div>
+        <div class="nav-icon">👥</div>
+        <div class="nav-icon">🏷️</div>
+        <div class="nav-icon">📋</div>
+        <div class="spacer"></div>
+        <div class="nav-icon">⚙️</div>
+      </div>
+      <div class="main">
+        <div class="zen-center">
+          <div class="zen-mascot">😺</div>
+          <div class="zen-greeting">今天也在努力点赞中~</div>
+          <div class="zen-status">已连续运行 7 天 · 一切正常</div>
+          <div class="zen-stats">
+            <div class="zen-stat"><div class="val">48</div><div class="lbl">今日已赞</div></div>
+            <div class="zen-stat"><div class="val">152</div><div class="lbl">剩余名额</div></div>
+            <div class="zen-stat"><div class="val">12</div><div class="lbl">今日回赞</div></div>
+          </div>
+          <div class="zen-ring"><div class="zen-ring-fill"></div></div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:8px">今日进度 48/50 (96%)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Comparison View -->
+<section class="comparison-grid" id="sec-compare">
+  <h2>设计方向对比</h2>
+
+  <table class="traits-table">
+    <thead>
+      <tr>
+        <th>特征</th>
+        <th>1. 经典仪表盘</th>
+        <th>2. Mascot 中心</th>
+        <th>3. 毛玻璃拟态</th>
+        <th>4. 渐变流动</th>
+        <th>5. 紧凑枢纽</th>
+        <th>6. 极简禅意</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>信息密度</td>
+        <td>中等</td>
+        <td>中等</td>
+        <td>中高</td>
+        <td>中等</td>
+        <td>高</td>
+        <td>极低</td>
+      </tr>
+      <tr>
+        <td>Kawaii 程度</td>
+        <td>★★★</td>
+        <td class="star">★★★★★</td>
+        <td>★★★★</td>
+        <td>★★★★</td>
+        <td>★★</td>
+        <td class="star">★★★★★</td>
+      </tr>
+      <tr>
+        <td>技术宅友好</td>
+        <td class="star">★★★★★</td>
+        <td>★★★</td>
+        <td>★★★★</td>
+        <td>★★★</td>
+        <td class="star">★★★★★</td>
+        <td>★★</td>
+      </tr>
+      <tr>
+        <td>情感化程度</td>
+        <td>★★</td>
+        <td class="star">★★★★★</td>
+        <td>★★★</td>
+        <td>★★★★</td>
+        <td>★</td>
+        <td class="star">★★★★★</td>
+      </tr>
+      <tr>
+        <td>开发复杂度</td>
+        <td>低</td>
+        <td>中等</td>
+        <td>中等</td>
+        <td>中等</td>
+        <td>低</td>
+        <td>低</td>
+      </tr>
+      <tr>
+        <td>适合用户</td>
+        <td>通用</td>
+        <td>ミク酱</td>
+        <td>通用</td>
+        <td>通用</td>
+        <td>技術宅太郎</td>
+        <td>ミク酱</td>
+      </tr>
+      <tr>
+        <td>Mascot 位置</td>
+        <td>侧边栏底部</td>
+        <td>右侧专区</td>
+        <td>无固定位置</td>
+        <td>Hero 横幅</td>
+        <td>无</td>
+        <td>中心焦点</td>
+      </tr>
+      <tr>
+        <td>布局参考</td>
+        <td>Clash Verge</td>
+        <td>BiliBili</td>
+        <td>iOS 控制中心</td>
+        <td>米游社</td>
+        <td>终端面板</td>
+        <td>Apple Watch</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<script>
+function showDirection(id) {
+  document.querySelectorAll('.mockup-section, .comparison-grid').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  document.querySelectorAll('.direction-nav button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+</script>
+
+</body>
+</html>

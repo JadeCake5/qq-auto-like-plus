@@ -1,0 +1,96 @@
+# QA Gate — Story 3.4: 开机自启与单实例
+# Reviewer: Quinn (QA Agent) | Model: Claude Opus 4.6
+# Date: 2026-03-14
+
+story: "3.4"
+title: "开机自启与单实例"
+epic: "3"
+reviewer: "Quinn"
+date: "2026-03-14"
+
+gate_decision: PASS
+
+ac_results:
+  total: 5
+  passed: 5
+  partial: 0
+  failed: 0
+  details:
+    - ac: "#1 应用通过 tauri-plugin-autostart 自动启动"
+      result: PASS
+      evidence: "lib.rs:15-18 (init with Some(vec![\"--autostarted\"])); settings.rs:59-67 (enable_autostart command)"
+    - ac: "#2 自启后面板窗口直接最小化到系统托盘"
+      result: PASS
+      evidence: "lib.rs:182-188 (std::env::args() 检测 --autostarted → window.hide())"
+    - ac: "#3 自启后恢复上次运行状态（暂停/运行）"
+      result: PASS
+      evidence: "scheduler.rs:72-80 (从 config 读取 engine_paused 并恢复); NapCat 启动由前端负责，边界合理且已文档化"
+    - ac: "#4 tauri-plugin-single-instance 防止多开，激活已有实例窗口"
+      result: PASS
+      evidence: "lib.rs:22-28 (show→unminimize→set_focus 完整激活链 + tracing::info 日志)"
+    - ac: "#5 Tauri command 控制 autostart + 状态持久化到 config 表"
+      result: PASS
+      evidence: "settings.rs:59-85 (enable/disable/is_enabled 三个 commands); lib.rs:215-217 (invoke_handler 注册); capabilities/default.json:10 (autostart:default 权限)"
+
+architecture_compliance: PASS
+notes:
+  - 无 println/unwrap/expect，错误处理用 .map_err(|e| e.to_string())
+  - 通过 Tauri State 注入 DB，线程安全（Arc<Mutex<Connection>>）
+  - 不创建新文件，不修改 Cargo.toml / capabilities / DB schema
+  - 复用已有 upsert_config 函数和插件初始化
+  - --autostarted 检测位于 setup 末尾，所有后台服务已初始化，无竞态风险
+
+findings:
+  p1: 0
+  p2: 0
+  p3: 2
+  p4: 1
+  details:
+    - id: P3-F1
+      severity: P3
+      type: consistency
+      description: |
+        enable_autostart 和 disable_autostart 修改 config 表后未 emit config:updated 事件。
+        update_config command (settings.rs:34) 统一 emit 该事件通知前端，但 autostart commands 跳过了。
+        前端主动调用所以功能不受影响，但破坏了 config 变更通知的一致性模式。
+      location: "settings.rs:59-80"
+      recommendation: |
+        在 enable_autostart 和 disable_autostart 的 upsert_config 之后添加：
+        let _ = app.emit("config:updated", "auto_start");
+        建议在 Story 4.3（设置面板）实现时一并补充。
+    - id: P3-F2
+      severity: P3
+      type: atomicity
+      description: |
+        enable_autostart 先调用 autolaunch().enable()（写 Windows 注册表），再 upsert_config（写 DB）。
+        若 DB 写入失败，OS 注册表已变更但 command 返回 Err，导致 OS 状态与 DB 状态不一致。
+        概率极低（仅 DB 损坏/poisoned mutex 场景），但不符合严格的原子操作模式。
+      location: "settings.rs:63-65 (enable), settings.rs:75-77 (disable)"
+      recommendation: |
+        方案A：反转顺序，先写 DB 再写注册表（DB 失败不影响 OS，注册表失败可回滚 DB）。
+        方案B：保持现状，概率极低且 is_autostart_enabled 读的是 OS 真实状态，可自修正。
+        推荐方案B（当前已足够），仅记录技术债。
+    - id: P4-F1
+      severity: P4
+      type: pre-existing
+      description: "9 个 cargo warnings 全为已有代码的未使用导入/函数，非本 Story 引入"
+      location: "engine/mod.rs, config/mod.rs, db/models.rs, engine/quota.rs"
+      recommendation: "后续 Story 可批量清理"
+
+files_reviewed:
+  - src-tauri/src/lib.rs
+  - src-tauri/src/commands/settings.rs
+  - src-tauri/src/engine/scheduler.rs
+  - src-tauri/src/db/models.rs
+  - src-tauri/Cargo.toml
+  - src-tauri/capabilities/default.json
+  - src-tauri/migrations/001_init.sql
+
+risk_assessment:
+  overall: LOW
+  factors:
+    - "改动量极小（2 文件、~40 行新代码），逻辑简单直接"
+    - "复用已有基础设施（autostart/single-instance 插件初始化、upsert_config）"
+    - "cargo check 通过，无新增 warnings"
+    - "--autostarted 检测无竞态风险，所有后台服务先初始化"
+    - "P3 findings 不影响核心功能，可延后修复"
