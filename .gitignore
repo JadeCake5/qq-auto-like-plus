@@ -41,5 +41,6 @@ src-tauri/gen/
 SendLike/
 qq-auto-like/
 
-# BMAD internal (keep planning/implementation artifacts, exclude temp)
-.bmad-method/tmp/
+# BMAD
+.bmad-method/
+_bmad/
