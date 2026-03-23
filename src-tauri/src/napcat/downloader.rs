@@ -7,7 +7,7 @@ use tokio::io::AsyncWriteExt;
 use super::{DownloadProgress, ExtractProgress};
 
 const NAPCAT_DOWNLOAD_URL: &str =
-    "https://github.com/NapNeko/NapCatQQ/releases/latest/download/NapCat.Shell.zip";
+    "https://github.com/NapNeko/NapCatQQ/releases/latest/download/NapCat.Shell.Windows.Node.zip";
 
 pub async fn download_napcat_zip(
     app_handle: &tauri::AppHandle,

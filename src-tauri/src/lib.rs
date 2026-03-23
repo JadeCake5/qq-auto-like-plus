@@ -49,7 +49,7 @@ pub fn run() {
             // OneBotClient 初始化
             let api_port: u16 = {
                 let conn = db_state.lock().expect("lock db for onebot init");
-                db::models::get_config_by_key(&conn, "api_port")
+                db::models::get_config_by_key(&conn, "napcat_api_port")
                     .ok()
                     .and_then(|c| c.value.parse().ok())
                     .unwrap_or(3000)
@@ -64,13 +64,11 @@ pub fn run() {
             app.manage(batch_running.clone());
 
             // LikeScheduler 初始化
-            let like_scheduler = {
-                let rt = tokio::runtime::Handle::current();
-                rt.block_on(async {
-                    engine::scheduler::LikeScheduler::new().await
-                        .expect("failed to create scheduler")
-                })
-            };
+            let like_scheduler = tauri::async_runtime::block_on(async {
+                engine::scheduler::LikeScheduler::new()
+                    .await
+                    .expect("failed to create scheduler")
+            });
             let scheduler_state: engine::scheduler::LikeSchedulerState =
                 std::sync::Arc::new(like_scheduler);
             app.manage(scheduler_state.clone());
@@ -81,7 +79,7 @@ pub fn run() {
             let running_for_sched = batch_running.clone();
             let app_handle = app.handle().clone();
             let sched = scheduler_state.clone();
-            tokio::spawn(async move {
+            tauri::async_runtime::spawn(async move {
                 if let Err(e) = sched.start(
                     db_for_sched,
                     onebot_for_sched,
@@ -94,7 +92,7 @@ pub fn run() {
 
             // 启动时清理过期点赞历史（90 天前）
             let db_for_cleanup = db_state.clone();
-            tokio::spawn(async move {
+            tauri::async_runtime::spawn(async move {
                 tokio::time::sleep(std::time::Duration::from_secs(10)).await;
                 if let Ok(conn) = db_for_cleanup.lock() {
                     match stats::queries::cleanup_old_history(&conn, 90) {
@@ -122,9 +120,17 @@ pub fn run() {
             };
             let webhook_app_handle = app.handle().clone();
             let webhook_handle: Option<webhook::WebhookServerHandle> = {
-                let rt = tokio::runtime::Handle::current();
-                match rt.block_on(webhook::start(webhook_app_handle, webhook_port)) {
-                    Ok(handle) => Some(handle),
+                match tauri::async_runtime::block_on(webhook::start(webhook_app_handle, webhook_port)) {
+                    Ok(handle) => {
+                        // 如果实际端口与配置不同（因为端口冲突回退），更新 DB
+                        let actual_port = handle.port();
+                        if actual_port != webhook_port {
+                            let conn = db_state.lock().expect("lock db for webhook port update");
+                            let _ = db::models::upsert_config(&conn, "webhook_port", &actual_port.to_string());
+                            tracing::info!("Webhook 实际端口 {} 已保存到配置", actual_port);
+                        }
+                        Some(handle)
+                    }
                     Err(e) => {
                         tracing::error!("Webhook 服务器启动失败: {}", e);
                         None
@@ -279,6 +285,9 @@ pub fn run() {
             commands::napcat::stop_napcat,
             commands::napcat::get_login_info_cmd,
             commands::napcat::restart_napcat,
+            commands::napcat::open_napcat_dir,
+            commands::napcat::clear_napcat_cache,
+            commands::napcat::update_napcat,
             commands::like::get_daily_stats,
             commands::like::start_batch_like,
             commands::engine::pause_engine,
@@ -302,6 +311,7 @@ pub fn run() {
             commands::stats::get_stats_monthly,
             commands::stats::get_like_type_ratio,
             commands::stats::get_friend_ranking,
+            commands::logs::get_startup_logs,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application");

@@ -6,6 +6,7 @@ import type { FriendWithTags, SyncFriendsResult, TagInfo } from "@/types/friends
 import type { QuotaStatus } from "@/types/stats";
 import type { LoginInfo, NapCatStatus } from "@/types/napcat";
 import type { HourlyStats, DailyStatsPoint, LikeTypeRatio, FriendRanking, StatsPeriod } from "@/types/stats";
+import type { LogEntry } from "@/stores/useLogStore";
 
 export async function getConfig(): Promise<ConfigEntry[]> {
   return invoke<ConfigEntry[]>("get_config");
@@ -36,6 +37,10 @@ export async function startNapcat(): Promise<void> {
 
 export async function stopNapcat(): Promise<void> {
   return invoke("stop_napcat");
+}
+
+export async function openNapcatDir(): Promise<void> {
+  return invoke("open_napcat_dir");
 }
 
 export async function getLoginInfo(): Promise<LoginInfo> {
@@ -134,4 +139,16 @@ export async function getLikeTypeRatio(period: StatsPeriod): Promise<LikeTypeRat
 
 export async function getFriendRanking(period: StatsPeriod): Promise<FriendRanking[]> {
   return invoke<FriendRanking[]>("get_friend_ranking", { period });
+}
+
+export async function getStartupLogs(): Promise<LogEntry[]> {
+  return invoke<LogEntry[]>("get_startup_logs");
+}
+
+export async function clearNapcatCache(): Promise<string> {
+  return invoke<string>("clear_napcat_cache");
+}
+
+export async function updateNapcat(): Promise<void> {
+  return invoke("update_napcat");
 }

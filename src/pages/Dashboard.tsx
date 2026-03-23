@@ -11,6 +11,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import HeroBanner from "@/components/dashboard/HeroBanner";
+import NapCatSetup from "@/components/dashboard/NapCatSetup";
 import StatCard from "@/components/dashboard/StatCard";
 
 function formatCountdown(nextRunTime: string | null): string {
@@ -96,6 +97,18 @@ export default function Dashboard() {
       : isRunning
         ? "正在执行中..."
         : "";
+
+  const showSetup = napCatStatus !== "running";
+
+  // NapCat 未就绪：仅显示 HeroBanner + 引导卡片
+  if (showSetup) {
+    return (
+      <div className="page-enter flex flex-col gap-4">
+        <HeroBanner />
+        <NapCatSetup />
+      </div>
+    );
+  }
 
   // 空状态
   if (!dailyStats && !isRunning) {

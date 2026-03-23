@@ -12,6 +12,7 @@ let logId = 0;
 
 export function TauriEventProvider() {
   const setNapCatStatus = useNapCatStore((s) => s.setStatus);
+  const setQrCodeSrc = useNapCatStore((s) => s.setQrCodeSrc);
   const setEngineStatus = useLikeStore((s) => s.setEngineStatus);
   const setBatchProgress = useLikeStore((s) => s.setBatchProgress);
   const onBatchComplete = useLikeStore((s) => s.onBatchComplete);
@@ -19,6 +20,11 @@ export function TauriEventProvider() {
   const fetchConfig = useSettingsStore((s) => s.fetchConfig);
 
   useTauriEvent<NapCatStatus>("napcat:status-changed", setNapCatStatus);
+  useTauriEvent<string>("napcat:qr-code", (payload) => {
+    if (payload.startsWith("data:image/")) {
+      setQrCodeSrc(payload);
+    }
+  });
   useTauriEvent<EngineStatus>("engine:status-changed", setEngineStatus);
   useTauriEvent<BatchLikeProgress>("like:progress", setBatchProgress);
   useTauriEvent<BatchLikeResult>("like:batch-complete", onBatchComplete);
@@ -35,6 +41,22 @@ export function TauriEventProvider() {
     useLikeStore.getState().fetchEngineStatus();
     useLikeStore.getState().fetchDailyStats();
     useSettingsStore.getState().fetchConfig();
+
+    // 加载历史日志（attachLogger 之前产生的）
+    import("@/lib/tauri").then(({ getStartupLogs }) => {
+      getStartupLogs()
+        .then((entries) => {
+          for (const entry of entries) {
+            useLogStore.getState().addEntry({
+              id: String(++logId),
+              timestamp: entry.timestamp,
+              level: entry.level,
+              message: entry.message,
+            });
+          }
+        })
+        .catch((e) => console.error("加载历史日志失败:", e));
+    });
   }, []);
 
   // attachLogger: 接收 Rust 后端 tracing 日志

@@ -1,6 +1,6 @@
 [package]
 name = "qq-auto-like-plus"
-version = "0.1.0"
+version = "0.2.0"
 description = "QQ Auto Like Plus - 自动为 QQ 好友点赞"
 authors = ["Shira"]
 edition = "2021"
@@ -36,4 +36,5 @@ chrono = { version = "0.4", features = ["serde"] }
 rand = "0.9"
 uuid = { version = "1", features = ["v4"] }
 zip = "2"
+base64 = "0.22"
 futures-util = "0.3"

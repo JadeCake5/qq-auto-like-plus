@@ -1,6 +1,7 @@
 pub mod engine;
 pub mod friends;
 pub mod like;
+pub mod logs;
 pub mod napcat;
 pub mod settings;
 pub mod stats;

@@ -12,7 +12,7 @@ src-tauri/target/
 
 # Logs
 *.log
-logs/
+/logs/
 
 # OS files
 .DS_Store
