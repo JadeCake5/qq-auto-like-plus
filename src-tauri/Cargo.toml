@@ -1,6 +1,6 @@
 [package]
 name = "qq-auto-like-plus"
-version = "0.2.0"
+version = "0.2.1"
 description = "QQ Auto Like Plus - 自动为 QQ 好友点赞"
 authors = ["Shira"]
 edition = "2021"
