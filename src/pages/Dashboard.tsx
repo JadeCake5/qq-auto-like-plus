@@ -32,6 +32,38 @@ function napCatStatusLabel(
   return { connected: false, label: "未连接" };
 }
 
+function LikeButton({
+  disabled,
+  tooltip,
+  onClick,
+  label,
+}: {
+  disabled: boolean;
+  tooltip: string;
+  onClick: () => void;
+  label: string;
+}) {
+  if (tooltip) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>
+            <Button disabled={disabled} onClick={onClick}>
+              {label}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{tooltip}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+  return (
+    <Button disabled={disabled} onClick={onClick}>
+      {label}
+    </Button>
+  );
+}
+
 export default function Dashboard() {
   const {
     dailyStats,
@@ -67,8 +99,10 @@ export default function Dashboard() {
 
   const handleStartBatch = useCallback(async () => {
     try {
+      useLikeStore.setState({ isRunning: true });
       await startBatchLike();
     } catch (e) {
+      useLikeStore.setState({ isRunning: false });
       console.error("start_batch_like failed", e);
     }
   }, []);
@@ -122,24 +156,12 @@ export default function Dashboard() {
           <p className="text-[length:var(--text-body)] text-text-secondary">
             还没有开始点赞哦~
           </p>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    disabled={batchDisabled}
-                    onClick={handleStartBatch}
-                    aria-label="立即点赞"
-                  />
-                }
-              >
-                立即点赞
-              </TooltipTrigger>
-              {batchTooltip && (
-                <TooltipContent>{batchTooltip}</TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
+          <LikeButton
+            disabled={batchDisabled}
+            tooltip={batchTooltip}
+            onClick={handleStartBatch}
+            label="立即点赞"
+          />
         </div>
       </div>
     );
@@ -184,24 +206,12 @@ export default function Dashboard() {
 
       {/* 操作区 */}
       <div className="flex items-center gap-4 rounded-lg bg-bg-card px-4 py-3">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  disabled={batchDisabled}
-                  onClick={handleStartBatch}
-                  aria-label="立即点赞"
-                />
-              }
-            >
-              {isRunning ? "执行中..." : "立即点赞"}
-            </TooltipTrigger>
-            {batchTooltip && (
-              <TooltipContent>{batchTooltip}</TooltipContent>
-            )}
-          </Tooltip>
-        </TooltipProvider>
+        <LikeButton
+          disabled={batchDisabled}
+          tooltip={batchTooltip}
+          onClick={handleStartBatch}
+          label={isRunning ? "执行中..." : "立即点赞"}
+        />
 
         <div className="flex items-center gap-2">
           <Switch

@@ -19,6 +19,7 @@ pub struct BatchLikeProgress {
     pub nickname: String,
     pub success: bool,
     pub skipped: bool,
+    pub error_msg: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -49,18 +50,22 @@ pub async fn run_batch_like(
         let bi: u64 = models::get_config_by_key(&conn, "batch_interval")
             .ok()
             .and_then(|c| c.value.parse().ok())
-            .unwrap_or(3);
+            .unwrap_or(5);
         (tpf, bi)
     };
 
-    // 3. 获取好友列表（async）
-    tracing::info!("批量点赞开始: 获取好友列表...");
-    let friends = onebot.get_friend_list().await
-        .map_err(AppError::OneBot)?;
-    tracing::info!("获取到 {} 个好友", friends.len());
+    // 3. 检查 DB 缓存的好友数量；只有缓存为空才调用 OneBot API
+    let cached_count: i64 = {
+        let conn = db.lock().map_err(|e| AppError::NapCat(e.to_string()))?;
+        models::get_friend_count(&conn)?
+    };
 
-    // 4. 缓存好友信息到 friends 表
-    {
+    if cached_count == 0 {
+        tracing::info!("好友缓存为空，从 OneBot 拉取好友列表...");
+        let friends = onebot.get_friend_list().await
+            .map_err(AppError::OneBot)?;
+        tracing::info!("获取到 {} 个好友，写入缓存", friends.len());
+
         let conn = db.lock().map_err(|e| AppError::NapCat(e.to_string()))?;
         let rows: Vec<models::FriendRow> = friends.iter().map(|f| models::FriendRow {
             user_id: f.user_id,
@@ -70,6 +75,8 @@ pub async fn run_batch_like(
         if let Err(e) = models::upsert_friends_batch(&conn, &rows) {
             tracing::warn!("缓存好友信息失败（不影响点赞）: {}", e);
         }
+    } else {
+        tracing::info!("批量点赞开始: 使用 DB 缓存的 {} 个好友（跳过 get_friend_list API）", cached_count);
     }
 
     // 5. 构建标签策略排序的点赞队列
@@ -83,6 +90,8 @@ pub async fn run_batch_like(
     let mut success_count = 0i32;
     let mut skipped_count = 0i32;
     let mut failed_count = 0i32;
+    let mut consecutive_failures = 0i32;
+    const MAX_CONSECUTIVE_FAILURES: i32 = 5;
 
     // 6. 逐个点赞（按标签优先级排序）
     for (i, strat) in like_queue.iter().enumerate() {
@@ -103,6 +112,7 @@ pub async fn run_batch_like(
                 nickname: strat.nickname.clone(),
                 success: false,
                 skipped: true,
+                error_msg: None,
             });
             continue;
         }
@@ -121,6 +131,7 @@ pub async fn run_batch_like(
                 nickname: strat.nickname.clone(),
                 success: false,
                 skipped: true,
+                error_msg: Some(msg.clone()),
             });
             break;
         }
@@ -140,6 +151,7 @@ pub async fn run_batch_like(
                     current, total, strat.nickname, strat.user_id, strat.like_times
                 );
                 success_count += 1;
+                consecutive_failures = 0;
                 (true, None)
             }
             Err(e) => {
@@ -148,6 +160,7 @@ pub async fn run_batch_like(
                     current, total, strat.nickname, strat.user_id, e
                 );
                 failed_count += 1;
+                consecutive_failures += 1;
                 (false, Some(e.to_string()))
             }
         };
@@ -168,9 +181,21 @@ pub async fn run_batch_like(
             nickname: strat.nickname.clone(),
             success,
             skipped: false,
+            error_msg: error_msg.clone(),
         });
 
-        // 6f. 间隔等待（最后一个不等待）
+        // 6f. 连续失败过多则提前终止
+        if consecutive_failures >= MAX_CONSECUTIVE_FAILURES {
+            tracing::error!(
+                "连续 {} 次点赞失败，提前终止批量点赞",
+                consecutive_failures
+            );
+            let _ = app.emit("like:batch-error",
+                format!("连续 {} 次点赞失败，已停止", consecutive_failures));
+            break;
+        }
+
+        // 6g. 间隔等待（最后一个不等待）
         if i < like_queue.len() - 1 {
             tokio::time::sleep(std::time::Duration::from_secs(batch_interval)).await;
         }

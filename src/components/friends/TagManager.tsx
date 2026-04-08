@@ -60,31 +60,28 @@ export default function TagManager() {
 
   return (
     <div className="rounded-xl bg-bg-card border border-border">
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center justify-between w-full px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-bg-elevated/50 rounded-xl transition-colors"
-      >
-        <span className="flex items-center gap-1.5">
+      <div className="flex items-center justify-between w-full px-4 py-2.5 text-sm font-medium text-text-primary">
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="flex items-center gap-1.5 hover:text-text-primary/80 transition-colors"
+        >
           {collapsed ? (
             <ChevronRight className="w-3.5 h-3.5" />
           ) : (
             <ChevronDown className="w-3.5 h-3.5" />
           )}
           标签管理
-        </span>
+        </button>
         <Button
           variant="ghost"
           size="xs"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleCreate();
-          }}
+          onClick={handleCreate}
           className="gap-1"
         >
           <Plus className="w-3 h-3" />
           新建标签
         </Button>
-      </button>
+      </div>
 
       {!collapsed && (
         <div className="flex flex-wrap gap-2 px-4 pb-3">

@@ -6,6 +6,7 @@ export interface BatchLikeProgress {
   nickname: string;
   success: boolean;
   skipped: boolean;
+  errorMsg?: string | null;
 }
 
 /** 批量点赞完成事件 payload（对应 like:batch-complete 事件） */

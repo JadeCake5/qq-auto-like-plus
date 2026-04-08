@@ -33,7 +33,7 @@ export const useLikeStore = create<LikeStore>((set) => ({
     }),
   setBatchProgress: (progress) => set({ batchProgress: progress }),
   onBatchComplete: (result) =>
-    set({ lastBatchResult: result, batchProgress: null }),
+    set({ lastBatchResult: result, batchProgress: null, isRunning: false }),
   fetchDailyStats: async () => {
     try {
       const stats = await invoke<QuotaStatus>("get_daily_stats");

@@ -40,7 +40,7 @@ impl OneBotClient {
                 tokio::time::sleep(RETRY_INTERVAL).await;
             }
 
-            tracing::info!("调用 OneBot API: {}", endpoint);
+            tracing::debug!("调用 OneBot API: {}", endpoint);
 
             match self.client.post(&url).json(body).send().await {
                 Ok(resp) => {
@@ -85,10 +85,42 @@ impl OneBotClient {
         Err(last_error.unwrap_or(OneBotError::Network("未知错误".to_string())))
     }
 
+    /// 调用 API，不重试（用于点赞等非关键操作）
+    async fn call_api_no_retry<T: DeserializeOwned>(
+        &self,
+        endpoint: &str,
+        body: &impl Serialize,
+    ) -> Result<Option<T>, OneBotError> {
+        let url = format!("{}{}", self.base_url, endpoint);
+        tracing::debug!("调用 OneBot API (no-retry): {}", endpoint);
+
+        match self.client.post(&url).json(body).send().await {
+            Ok(resp) => {
+                let status = resp.status();
+                if !status.is_success() {
+                    return Err(OneBotError::ApiError {
+                        retcode: status.as_u16() as i32,
+                        message: format!("HTTP {}", status),
+                    });
+                }
+                let onebot_resp: OneBotResponse<T> =
+                    resp.json().await.map_err(|e| OneBotError::Deserialize(e.to_string()))?;
+                if onebot_resp.status != "ok" {
+                    return Err(OneBotError::ApiError {
+                        retcode: onebot_resp.retcode,
+                        message: format!("status={}", onebot_resp.status),
+                    });
+                }
+                Ok(onebot_resp.data)
+            }
+            Err(e) => Err(classify_reqwest_error(e)),
+        }
+    }
+
     pub async fn send_like(&self, user_id: i64, times: i32) -> Result<(), OneBotError> {
-        tracing::info!("点赞: user_id={}, times={}", user_id, times);
+        tracing::debug!("点赞: user_id={}, times={}", user_id, times);
         let req = SendLikeRequest { user_id, times };
-        let _: Option<serde_json::Value> = self.call_api("/send_like", &req).await?;
+        let _: Option<serde_json::Value> = self.call_api_no_retry("/send_like", &req).await?;
         Ok(())
     }
 

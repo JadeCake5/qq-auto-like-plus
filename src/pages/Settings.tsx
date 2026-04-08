@@ -142,7 +142,7 @@ export default function Settings() {
         <SliderField
           label="每日名额"
           value={config.dailyLimit}
-          min={1}
+          min={20}
           max={200}
           unit="人"
           onChange={(v) => saveConfig("daily_limit", String(v))}

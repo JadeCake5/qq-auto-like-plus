@@ -37,11 +37,14 @@ pub fn get_quota_status_for_date(conn: &Connection, date: &str) -> Result<QuotaS
     let daily_limit: i32 = models::get_config_by_key(conn, "daily_limit")
         .ok()
         .and_then(|c| c.value.parse().ok())
-        .unwrap_or(50);
-    let reserved_for_reply: i32 = models::get_config_by_key(conn, "reserved_for_reply")
+        .unwrap_or(50)
+        .max(10); // 强制最小值 10
+    let raw_reserved: i32 = models::get_config_by_key(conn, "reserved_for_reply")
         .ok()
         .and_then(|c| c.value.parse().ok())
         .unwrap_or(10);
+    // 确保 reserved_for_reply 不超过 daily_limit 的一半，防止定时名额为零
+    let reserved_for_reply = raw_reserved.min(daily_limit / 2);
 
     let state = models::get_today_state(conn, date)?;
 
