@@ -1,6 +1,6 @@
 # QQ Auto Like Plus
 
-![screenshot](docs/screenshot.png)
+<img src="docs/screenshot.png" alt="screenshot" width="480" />
 
 <sub><sup><i>Made for Xiaoyi</i></sup></sub>
 
