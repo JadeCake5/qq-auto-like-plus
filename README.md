@@ -1,5 +1,8 @@
 # QQ Auto Like Plus
 
+```python
+Made for Xiaoyi
+```
 一款 Windows 桌面应用，自动为 QQ 好友主页点赞。双击即用，后台静默运行。
 
 ## 功能
