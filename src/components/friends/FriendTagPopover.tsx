@@ -55,11 +55,11 @@ export default function FriendTagPopover({
   }, [open, updatePosition]);
 
   const toggle = async (tagId: number) => {
-    const next = selectedIds.includes(tagId)
-      ? selectedIds.filter((id) => id !== tagId)
-      : [...selectedIds, tagId];
+    // 单选：点已选中的标签 → 清空；点其他 → 替换为仅这一个
+    const next = selectedIds.includes(tagId) ? [] : [tagId];
     try {
       await setFriendTags(friendId, next);
+      setOpen(false);
       toast.success("标签已更新");
     } catch {
       toast.error("标签更新失败");
